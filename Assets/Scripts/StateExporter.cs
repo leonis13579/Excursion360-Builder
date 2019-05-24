@@ -47,8 +47,16 @@ namespace TourConfig
 [ExecuteInEditMode]
 public class StateExporter : EditorWindow
 {
+    private UnityEngine.Object _initialStateObject;
+
     [MenuItem("VR Tour/Export")]
-    static void ExportStates()
+    static void ShowWindow()
+    {
+        var window = GetWindowWithRect<StateExporter>(new Rect(0, 0, 250, 100));
+        window.Show();
+    }
+
+    void ExportTour(State initialState)
     {
         State[] states = FindObjectsOfType<State>();
 
@@ -60,7 +68,8 @@ public class StateExporter : EditorWindow
 
         // Input path
         string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
-        if (path.Length == 0) {
+        if (path.Length == 0)
+        {
             //EditorUtility.DisplayDialog("Error", "Invalid path!", "Ok");
             return;
         }
@@ -70,10 +79,7 @@ public class StateExporter : EditorWindow
 
         UpdateProcess(0, states.Length);
 
-        TourConfig.Tour tour = new TourConfig.Tour
-        {
-            firstStateId = "state_0"
-        };
+        TourConfig.Tour tour = new TourConfig.Tour();
 
         for (int i = 0; i < states.Length; ++i)
         {
@@ -97,6 +103,8 @@ public class StateExporter : EditorWindow
 
             UpdateProcess(i + 1, states.Length);
         }
+
+        titleToId.TryGetValue(initialState.title, out tour.firstStateId);
 
         // Process links
         for (int i = 0; i < states.Length; ++i)
@@ -131,6 +139,25 @@ public class StateExporter : EditorWindow
         File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour));
 
         EditorUtility.ClearProgressBar();
+    }
+
+    void OnGUI()
+    {
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label("Initial state");
+        _initialStateObject = EditorGUILayout.ObjectField(_initialStateObject, typeof(State), true);
+        EditorGUILayout.EndHorizontal();
+
+        if (GUILayout.Button("Export"))
+        {
+            if (_initialStateObject == null) {
+                ShowNotification(new GUIContent("No initial state selected"));
+            }
+            else
+            {
+                ExportTour(_initialStateObject as State);
+            }
+        }
     }
 
     static void UpdateProcess(int current, int target)
