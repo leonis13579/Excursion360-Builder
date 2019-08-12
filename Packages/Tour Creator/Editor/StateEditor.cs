@@ -25,10 +25,14 @@ public class StateEditor
 
 
     private const string GROUP_NAME = "Tour Creator";
+
     private const string MENU_ITEM_NEW_TOUR = GROUP_NAME + "/New Tour";
     private const string MENU_ITEM_STATE_EDITOR = GROUP_NAME + "/State Editor";
+
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
+
+    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build Desktop";
     private const string MENU_ITEM_EXPORT_TOUR = GROUP_NAME + "/Export Tour";
 
     private static bool _areConnectionsVisible;
@@ -93,7 +97,13 @@ public class StateEditor
         SetLabelsVisible(!_areLabelsVisible);
     }
 
-    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 40)]
+    [MenuItem(MENU_ITEM_BUILD_DESKTOP, false,40)]
+    private static void MenuItemBuildDesktop()
+    {
+        DesktopBuilder.Build();
+    }
+
+    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 41)]
     static void MenuShowExportWindow()
     {
         EditorWindow.GetWindowWithRect<StateExporter>(new Rect(0, 0, 250, 100));

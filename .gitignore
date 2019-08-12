@@ -5,11 +5,7 @@
 [Bb]uilds/
 [Ll]ogs/
 
-# Never ignore Asset meta data
-![Aa]ssets/**/*.meta
-
-[Aa]ssets/Scenes*
-[Aa]ssets/Textures*
+[Aa]ssets/**/*
 
 # Visual Studio cache directory
 .vs/

@@ -129,6 +129,9 @@ public class StateEditorWindow : EditorWindow
 
     private void DrawStateEditPageGUI()
     {
+        if (EditorApplication.isPlaying)
+            return;
+
         var state = _selectedStates[0];
 
         if (_connectionsEditMode)
