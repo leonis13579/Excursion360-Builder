@@ -1,7 +1,6 @@
 # Tour Creator - Tools for creating tours
 
 ## Installation
-### As unity module
 This repository can be installed as unity module directly from git url. In this way new line should be added to
 `Packages/manifest.json`:
 
@@ -10,9 +9,6 @@ This repository can be installed as unity module directly from git url. In this 
 ```
 
 *P.S. It may fail some assertions when first opened, so try reopen Unity*
-
-### As source
-If you can't / don't want to use unity modules, code can be downloaded as sources archive.
 
 ## How to use
 1. **Tour Creator > New Tour**. New scene will be created.
