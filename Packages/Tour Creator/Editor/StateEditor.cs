@@ -100,7 +100,7 @@ public class StateEditor
     [MenuItem(MENU_ITEM_BUILD_DESKTOP, false,40)]
     private static void MenuItemBuildDesktop()
     {
-        DesktopBuilder.Build();
+        ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);
     }
 
     [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 41)]
