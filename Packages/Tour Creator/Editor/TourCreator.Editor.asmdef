@@ -1,0 +1,17 @@
+{
+    "name": "TourCreator.Editor",
+    "references": [
+        "Unity.TextMeshPro",
+        "TourCreator.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

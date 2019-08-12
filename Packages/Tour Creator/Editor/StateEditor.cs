@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 
 [InitializeOnLoad]
 public class StateEditor
@@ -23,8 +24,8 @@ public class StateEditor
     public static StateGraphRenderer StateGraphRenderer;
 
 
-    private const string GROUP_NAME = "VR Tour";
-    private const string MENU_ITEM_PREPARE_SCENE = GROUP_NAME + "/Prepare Scene";
+    private const string GROUP_NAME = "Tour Creator";
+    private const string MENU_ITEM_NEW_TOUR = GROUP_NAME + "/New Tour";
     private const string MENU_ITEM_STATE_EDITOR = GROUP_NAME + "/State Editor";
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
@@ -36,11 +37,11 @@ public class StateEditor
     static StateEditor()
     {
         // Find view sphere prefab
-        ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/ViewSphere.prefab");
+        ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
         Assert.IsNotNull(ViewSpherePrefab);
 
         // Find state prefab
-        StatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/State.prefab");
+        StatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
         Assert.IsNotNull(StatePrefab);
 
         // Create renderer
@@ -59,11 +60,19 @@ public class StateEditor
         };
     }
 
-    [MenuItem(MENU_ITEM_PREPARE_SCENE, false, 0)]
-    static void MenuItemPrepareScene()
+    [MenuItem(MENU_ITEM_NEW_TOUR, false, 0)]
+    static void MenuItemNewTour()
     {
-        if (GameObject.FindObjectOfType<ViewSphere>() == null)
-            GameObject.Instantiate(ViewSpherePrefab);
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+        RenderSettings.skybox = null;
+
+        foreach (var gameObject in scene.GetRootGameObjects())
+        {
+            GameObject.DestroyImmediate(gameObject);
+        }
+        
+        PrefabUtility.InstantiatePrefab(ViewSpherePrefab);
     }
 
     [MenuItem(MENU_ITEM_STATE_EDITOR, false, 1)]
