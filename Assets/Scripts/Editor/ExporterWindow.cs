@@ -49,13 +49,6 @@ public class StateExporter : EditorWindow
 {
     private UnityEngine.Object _initialStateObject;
 
-    [MenuItem("VR Tour/Export")]
-    static void ShowWindow()
-    {
-        var window = GetWindowWithRect<StateExporter>(new Rect(0, 0, 250, 100));
-        window.Show();
-    }
-
     void ExportTour(State initialState)
     {
         State[] states = FindObjectsOfType<State>();
@@ -120,7 +113,7 @@ public class StateExporter : EditorWindow
 
             foreach (var connection in connections)
             {
-                if (!titleToId.TryGetValue(connection.state.title, out string otherId))
+                if (!titleToId.TryGetValue(connection.origin.title, out string otherId))
                 {
                     continue;
                 }

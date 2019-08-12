@@ -1,55 +1,67 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
-public class PlayerState : MonoBehaviour
+/**
+ * @brief Main object
+ */
+public class ViewSphere : MonoBehaviour
 {
-    public static PlayerState Instance
+    public static ViewSphere Instance
     {
         get
         {
             if (_instance == null)
-                _instance = FindObjectOfType<PlayerState>();
+                _instance = FindObjectOfType<ViewSphere>();
 
             return _instance;
         }
     }
 
-    private static PlayerState _instance;
-    
-    public Marker markerPrefab;
-    public Renderer panoramaSphere;
+    private static ViewSphere _instance;
 
-    public State currentState;
+    public State startState;
+    public Marker markerPrefab;
+
+    /**
+     * @brief Transition speed in seconds
+     */
     public float transitionSpeed = 2.0f;
 
+    private State _currentState;
     private State _nextState;
     private float _transition;
 
+    private Renderer _renderer;
     private MaterialPropertyBlock _materialProperties;
 
     private List<Marker> _markers = new List<Marker>();
 
-    private void Start()
+    void Start()
     {
+        _renderer = GetComponentInChildren<Renderer>();
+        Assert.IsNotNull(_renderer);
+
+        Assert.IsNotNull(startState);
+        _currentState = startState;
         _nextState = null;
-        _transition = 0.0f;
 
         SpawnConnections();
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
         ClearConnections();
     }
 
-    private void Update()
+    void Update()
     {
         if (_nextState != null)
         {
             _transition += Time.deltaTime;
             if (_transition >= 1.0f) {
-                currentState = _nextState;
+                _currentState = _nextState;
                 _nextState = null;
                 _transition = 0.0f;
 
@@ -73,14 +85,12 @@ public class PlayerState : MonoBehaviour
 
     public void SpawnConnections()
     {
-        if (currentState == null)
-            return;
-
-        var connections = currentState.GetComponents<Connection>();
+        var connections = _currentState.GetComponents<Connection>();
         
         foreach (var connection in connections)
         {
             Marker marker = Instantiate(markerPrefab, transform);
+            marker.name = "Marker to " + connection.destination.origin.title;
             marker.connection = connection;
             marker.transform.localPosition = connection.orientation * Vector3.forward;
 
@@ -99,18 +109,18 @@ public class PlayerState : MonoBehaviour
 
     private void UpdateMaterial()
     {
-        if (currentState == null || _transition != 0.0f && _nextState == null)
+        if (_currentState == null || _transition != 0.0f && _nextState == null)
             return;
 
         if (_materialProperties == null)
             _materialProperties = new MaterialPropertyBlock();
 
-        panoramaSphere.GetPropertyBlock(_materialProperties);
+        _renderer.GetPropertyBlock(_materialProperties);
 
         // Set main texture and orientation
-        _materialProperties.SetTexture("_MainTex", currentState.panoramaTexture);
+        _materialProperties.SetTexture("_MainTex", _currentState.panoramaTexture);
 
-        var mr = currentState.transform.rotation;
+        var mr = _currentState.transform.rotation;
         _materialProperties.SetVector("_MainOrientation", new Vector4(
             mr.x, mr.y, mr.z, mr.w));
 
@@ -127,6 +137,6 @@ public class PlayerState : MonoBehaviour
         // Set transition
         _materialProperties.SetFloat("_Transition", _transition);
 
-        panoramaSphere.SetPropertyBlock(_materialProperties);
+        _renderer.SetPropertyBlock(_materialProperties);
     }
 }

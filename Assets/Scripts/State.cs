@@ -6,9 +6,15 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+/**
+ * @brief Represents some place
+ */
 [ExecuteInEditMode]
 public class State : MonoBehaviour
 {
+    /**
+     * @brief Name of this place
+     */
     public string title;
 
     public Texture panoramaTexture;
@@ -16,7 +22,7 @@ public class State : MonoBehaviour
     private Renderer _renderer;
     private MaterialPropertyBlock _materialProperties;
 
-    private void Start()
+    void Start()
     {
         if (
 #if UNITY_EDITOR
@@ -28,6 +34,13 @@ public class State : MonoBehaviour
         }
 
         UpdateTexture();
+    }
+
+    void Update()
+    {
+#if UNITY_EDITOR
+        name = title;
+#endif
     }
 
     public void UpdateTexture()

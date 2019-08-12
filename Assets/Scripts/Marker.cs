@@ -2,11 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * @brief Physical representation of connection origin
+ */
 public class Marker : MonoBehaviour
 {
+    /**
+     * @brief Connection to which this marker is assigned
+     */
     public Connection connection;
 
-    public bool Hovered
+    /**
+     * @brief Affects animation varialbe "Hovered"
+     */
+    public bool hovered
     {
         get
         {
@@ -18,14 +27,16 @@ public class Marker : MonoBehaviour
                 return;
 
             _hovered = value;
-            _animator.SetBool("Hovered", _hovered);
+
+            if (_animator != null)
+                _animator.SetBool("Hovered", _hovered);
         }
     }
 
     private Animator _animator;
     private bool _hovered;
 
-    private void Start()
+    void Start()
     {
         _animator = GetComponent<Animator>();
     }

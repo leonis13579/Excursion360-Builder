@@ -2,36 +2,48 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * @brief Base class for pointers
+ * 
+ * Something like this should be in child class:
+ * @code{.cs}
+ * void Update()
+ * {
+ *     currentRay = get ray from view direction/mouse/e.t.c;
+ *     
+ *     Connection connection;
+ *     if (HoverCheck(out connection) && smth is pressed)
+ *         ViewSphere.Instance.StartTransition(connection.destination.origin);
+ * }
+ * @endcode
+ */
 public class Pointer : MonoBehaviour
 {
-    public LayerMask markersLayer = 1 << 9;
-    public MarkerLabel markerLabelPrefab;
+    public LayerMask markersLayer = 1 << 9; /// Layer used for raycasting
 
-    [HideInInspector]
-    public Ray currentRay;
+    public MarkerLabel markerLabelPrefab; /// Prefab, spawned on hover
 
     private Marker _lastHoveredMarker = null;
     private MarkerLabel _markerLabel;
 
-    public void Awake()
+    void Awake()
     {
         _markerLabel = Instantiate(markerLabelPrefab, transform);
         _markerLabel.gameObject.SetActive(false);
     }
 
-    public bool HoverCheck(out Connection connection)
+    public bool HoverCheck(Ray ray, out Connection connection)
     {
         connection = null;
 
-        RaycastHit hit;
-        bool intersects = Physics.Raycast(currentRay, out hit, 10.0f, markersLayer);
+        bool intersects = Physics.Raycast(ray, out RaycastHit hit, 10.0f, markersLayer);
 
         Marker marker = null;
         if (intersects)
             marker = hit.collider.gameObject.GetComponent<Marker>();
 
         if (_lastHoveredMarker && _lastHoveredMarker != marker)
-            _lastHoveredMarker.Hovered = false;
+            _lastHoveredMarker.hovered = false;
 
         _lastHoveredMarker = marker;
 
@@ -41,13 +53,13 @@ public class Pointer : MonoBehaviour
             return false;
         }
 
-        _lastHoveredMarker.Hovered = true;
+        _lastHoveredMarker.hovered = true;
         connection = marker.connection;
 
         _markerLabel.gameObject.SetActive(true);
-        _markerLabel.Text = connection.destination.state.title;
+        _markerLabel.text = connection.destination.origin.title;
 
-        var origin = PlayerState.Instance.transform.position;
+        var origin = ViewSphere.Instance.transform.position;
         var direction = hit.point - origin;
         _markerLabel.transform.position = origin + direction.normalized * 0.9f + Vector3.up * 0.02f;
 

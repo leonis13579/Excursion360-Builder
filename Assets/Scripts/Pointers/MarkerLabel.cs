@@ -1,11 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using TMPro;
 
+/**
+ * @brief Text billboard
+ * 
+ * Used in default pointers
+ */
 public class MarkerLabel : MonoBehaviour
 {
-    public string Text
+    public string text
     {
         set
         {
@@ -25,6 +30,6 @@ public class MarkerLabel : MonoBehaviour
 
     void Update()
     {
-        transform.rotation = Quaternion.LookRotation(transform.position - PlayerState.Instance.transform.position);
+        transform.rotation = Quaternion.LookRotation(transform.position - ViewSphere.Instance.transform.position);
     }
 }

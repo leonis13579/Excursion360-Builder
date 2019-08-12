@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * @brief Mouse controlled pointer
+ */
 public class DesktopPointer : Pointer
 {
     public float sensitivityX = 1f;
@@ -17,12 +20,9 @@ public class DesktopPointer : Pointer
 
     void Update()
     {
-        currentRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        Connection connection;
-        if (HoverCheck(out connection) && Input.GetMouseButtonUp(0))
+        if (HoverCheck(Camera.main.ScreenPointToRay(Input.mousePosition), out Connection connection) && Input.GetMouseButtonUp(0))
         {
-            PlayerState.Instance.StartTransition(connection.destination.state);
+            ViewSphere.Instance.StartTransition(connection.destination.origin);
         }
         else if (Input.GetMouseButton(0))
         {
