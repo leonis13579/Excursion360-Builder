@@ -30,6 +30,6 @@ public class MarkerLabel : MonoBehaviour
 
     void Update()
     {
-        transform.rotation = Quaternion.LookRotation(transform.position - ViewSphere.Instance.transform.position);
+        transform.rotation = Quaternion.LookRotation(transform.position - Tour.Instance.transform.position);
     }
 }

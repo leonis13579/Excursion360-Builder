@@ -68,7 +68,7 @@ public class ApplicationBuilder
 
     static void DisablePointersExcept<T>()
     {
-        ViewSphere viewSphere = GameObject.FindObjectOfType<ViewSphere>();
+        Tour viewSphere = GameObject.FindObjectOfType<Tour>();
         foreach (Transform child in viewSphere.transform)
         {
             Pointer pointer = child.GetComponent<Pointer>();

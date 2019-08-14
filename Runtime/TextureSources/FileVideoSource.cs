@@ -3,77 +3,94 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class FileVideoSource : TextureSource
 {
-    public VideoClip videoClip;
+    public enum PlayMode
+    {
+        RestartOnEnter,
+        LoopInBackground
+    }
 
-    private RenderTexture _renderTexture = null;
+    public VideoClip videoClip;
+    public PlayMode playMode = PlayMode.RestartOnEnter;
+
     private VideoClip _currentVideoClip = null;
-    private bool _isPlaying = false;
+
+    private VideoPlayer _currentVideoPlayer = null;
+    private RenderTexture _currentRenderTexture = null;
 
     public override IEnumerator LoadTexture()
     {
         if (videoClip == null)
         {
             loadedTexture = null;
-            _renderTexture = null;
+            _currentRenderTexture = null;
             _currentVideoClip = null;
             yield break;
         }
 
         if (_currentVideoClip == null || _currentVideoClip != videoClip)
         { 
-            _renderTexture = new RenderTexture((int)videoClip.width, (int)videoClip.height, 0,
-                RenderTextureFormat.ARGB32);
             _currentVideoClip = videoClip;
+            _currentRenderTexture = new RenderTexture((int)videoClip.width, (int)videoClip.height, 0,
+                RenderTextureFormat.ARGB32);
 
 #if UNITY_EDITOR
-            GameObject previewGeneratorObject = new GameObject();
-            previewGeneratorObject.name = "__preview_generator__";
-            previewGeneratorObject.SetActive(false);
-
-            var previewGenerator = previewGeneratorObject.AddComponent<VideoPreviewGenerator>();
-            previewGenerator.videoClip = videoClip;
-            previewGenerator.renderTexture = _renderTexture;
-
-            previewGeneratorObject.SetActive(true);
+            if (!EditorApplication.isPlaying)
+                GeneratePreview();
 #endif
         }
 
-        loadedTexture = _renderTexture;
-        Debug.Log("Updating");
+        loadedTexture = _currentRenderTexture;
 
-        if (inUse && _renderTexture != null && !_isPlaying)
+        if (inUse && _currentRenderTexture != null && _currentVideoPlayer && !_currentVideoPlayer.isPlaying)
         {
-            var videoPlayer = Tour.Instance.videoPlayer;
-
-            videoPlayer.targetTexture = _renderTexture;
-            videoPlayer.Play();
-            Debug.Log("Play");
-
-            _isPlaying = true;
+            _currentVideoPlayer.targetTexture = _currentRenderTexture;
         }
     }
 
     protected override void OnStartUsing()
     {
-        var videoPlayer = Tour.Instance.videoPlayer;
+        if (_currentVideoPlayer != null && playMode == PlayMode.LoopInBackground)
+            return;
 
-        videoPlayer.renderMode = VideoRenderMode.RenderTexture;
-        videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
-        videoPlayer.isLooping = true;
+        if (_currentVideoPlayer == null)
+            _currentVideoPlayer = Tour.Instance.videoPlayerPool.Aquire();
 
-        videoPlayer.clip = videoClip;
-        videoPlayer.Pause();
+        _currentVideoPlayer.renderMode = VideoRenderMode.RenderTexture;
+        _currentVideoPlayer.audioOutputMode = VideoAudioOutputMode.None;
+        _currentVideoPlayer.isLooping = playMode == PlayMode.LoopInBackground;
 
-        Debug.Log("Start using");
+        _currentVideoPlayer.clip = videoClip;
+        
+        _currentVideoPlayer.time = 0;
+        _currentVideoPlayer.Play();
+
+        Graphics.Blit(Texture2D.blackTexture, _currentRenderTexture);
     }
 
     protected override void OnStopUsing()
     {
-        Tour.Instance.videoPlayer.Pause();
-        _isPlaying = false;
+        if (playMode != PlayMode.LoopInBackground)
+        { 
+            Tour.Instance.videoPlayerPool.Release(_currentVideoPlayer);
+        }
+    }
 
-        Debug.Log("Stop using");
+    private void GeneratePreview()
+    {
+        GameObject previewGeneratorObject = new GameObject();
+        previewGeneratorObject.name = "__preview_generator__";
+        previewGeneratorObject.SetActive(false);
+
+        var previewGenerator = previewGeneratorObject.AddComponent<VideoPreviewGenerator>();
+        previewGenerator.videoClip = videoClip;
+        previewGenerator.renderTexture = _currentRenderTexture;
+
+        previewGeneratorObject.SetActive(true);
     }
 }

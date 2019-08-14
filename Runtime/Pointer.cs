@@ -59,7 +59,7 @@ public class Pointer : MonoBehaviour
         _markerLabel.gameObject.SetActive(true);
         _markerLabel.text = connection.destination.origin.title;
 
-        var origin = ViewSphere.Instance.transform.position;
+        var origin = Tour.Instance.transform.position;
         var direction = hit.point - origin;
         _markerLabel.transform.position = origin + direction.normalized * 0.9f + Vector3.up * 0.02f;
 

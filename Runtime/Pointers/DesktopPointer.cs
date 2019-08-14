@@ -22,7 +22,7 @@ public class DesktopPointer : Pointer
     {
         if (HoverCheck(Camera.main.ScreenPointToRay(Input.mousePosition), out Connection connection) && Input.GetMouseButtonUp(0))
         {
-            ViewSphere.Instance.StartTransition(connection.destination.origin);
+            Tour.Instance.StartTransition(connection.destination.origin);
         }
         else if (Input.GetMouseButton(0))
         {
