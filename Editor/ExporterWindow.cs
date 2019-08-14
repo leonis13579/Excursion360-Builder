@@ -88,7 +88,7 @@ public class StateExporter : EditorWindow
             tour.states.Add(exportedState);
             titleToId.Add(state.title, exportedState.id);
 
-            string sourcePath = AssetDatabase.GetAssetPath(state.panoramaTexture);
+            string sourcePath = "";//AssetDatabase.GetAssetPath(state.panoramaTexture);
 
             exportedState.url = "state_" + i + Path.GetExtension(sourcePath);
 

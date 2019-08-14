@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,12 +18,10 @@ public class State : MonoBehaviour
      */
     public string title;
 
-    public Texture panoramaTexture;
-
     private Renderer _renderer;
     private MaterialPropertyBlock _materialProperties;
 
-    void Start()
+    void Awake()
     {
         if (
 #if UNITY_EDITOR
@@ -33,29 +32,63 @@ public class State : MonoBehaviour
             GetComponent<Renderer>().enabled = false;
         }
 
-        UpdateTexture();
+#if UNITY_EDITOR
+        TextureSource textureSource = GetComponent<TextureSource>();
+        if (textureSource == null)
+            gameObject.AddComponent<FileTextureSource>();
+
+        ReloadTexture();
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void OnDestroy()
+    {
+        var connections = GetComponents<Connection>();
+        foreach (var connection in connections)
+            if (connection.destination)
+                Undo.DestroyObjectImmediate(connection.destination);
     }
 
     void Update()
     {
-#if UNITY_EDITOR
         name = title;
-#endif
     }
 
-    public void UpdateTexture()
+    public void Reload()
     {
-        if (panoramaTexture == null)
+        var connections = GetComponents<Connection>();
+        foreach (var connection in connections)
+        {
+            if (connection.destination)
+                connection.destination.destination = connection;
+        }
+
+        ReloadTexture();
+    }
+
+    public void ReloadTexture()
+    {
+        TextureSource textureSource = GetComponent<TextureSource>();
+        if (textureSource == null)
             return;
+
+        StartCoroutine(LoadTexture(textureSource));
+    }
+
+    private IEnumerator LoadTexture(TextureSource textureSource)
+    {
+        yield return textureSource.LoadTexture();
 
         if (_renderer == null)
             _renderer = GetComponent<Renderer>();
 
         if (_materialProperties == null)
             _materialProperties = new MaterialPropertyBlock();
-        
+
         _renderer.GetPropertyBlock(_materialProperties);
-        _materialProperties.SetTexture("_MainTex", panoramaTexture);
+        _materialProperties.SetTexture("_MainTex", textureSource.loadedTexture);
         _renderer.SetPropertyBlock(_materialProperties);
     }
+#endif
 }

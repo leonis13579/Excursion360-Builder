@@ -44,17 +44,13 @@ public class StateGraphRenderer
             if (targetState != null && state != targetState)
                 continue;
 
-            // Draw all label when no target selected
-            if (targetState == null && showLabels)
-            {
-                Handles.color = Color.blue;
-                Handles.Label(state.transform.position, state.title, _labelsStyle);
-            }
-
             var connections = state.GetComponents<Connection>();
 
             foreach (var connection in connections)
             {
+                if (connection.destination == null)
+                    continue;
+
                 var firstConnectionPosition = connection.transform.position + connection.orientation * Vector3.forward;
                 var secondConnectionPosition = connection.destination.origin.transform.position +
                     connection.destination.orientation * Vector3.forward;
@@ -80,6 +76,13 @@ public class StateGraphRenderer
                     Handles.color = Color.blue;
                     Handles.Label(firstConnectionPosition, connection.destination.origin.title, _labelsStyle);
                 }
+            }
+
+            // Draw all labels when no target selected
+            if (targetState == null && showLabels)
+            {
+                Handles.color = Color.blue;
+                Handles.Label(state.transform.position, state.title, _labelsStyle);
             }
         }
     }

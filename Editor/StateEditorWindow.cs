@@ -13,6 +13,10 @@ public class StateEditorWindow : EditorWindow
 
     private bool _connectionsEditMode = false;
 
+    private TextureSourceEditor _textureSourceEditor = new TextureSourceEditor();
+
+    private Vector2 _connectionsListScroll = Vector2.zero;
+
     private static GUIStyle ToggleButtonStyleNormal = null;
     private static GUIStyle ToggleButtonStyleToggled = null;
 
@@ -66,6 +70,7 @@ public class StateEditorWindow : EditorWindow
         {
             var newObject = PrefabUtility.InstantiatePrefab(StateEditor.StatePrefab) as GameObject;
             SelectObject(newObject);
+            Undo.RegisterCreatedObjectUndo(newObject, "Undo state creation");
         }
 
         EditorGUILayout.Space();
@@ -114,11 +119,12 @@ public class StateEditorWindow : EditorWindow
                 var normal = Vector3.Cross(rightDirection, ray.direction);
                 var hitPosition = state.transform.position + ReflectDirection(toCenterDirection, normal);
 
+                Undo.RecordObject(_currentConnection, "Undo orientation change");
+
                 _currentConnection.orientation = Quaternion.FromToRotation(Vector3.forward,
                     hitPosition - state.transform.position);
             }
         }
-
     }
 
     private void DrawIdlePageGUI()
@@ -143,22 +149,33 @@ public class StateEditorWindow : EditorWindow
         EditorGUILayout.Space();
 
         // Draw panorama texture edit field
-        GUILayout.Label("State panorama: ", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
-        state.panoramaTexture = EditorGUILayout.ObjectField(state.panoramaTexture, typeof(Texture), true) as Texture;
-        state.UpdateTexture();
+        GUILayout.Label("Panorama: ", EditorStyles.boldLabel);
+
+        GUILayout.FlexibleSpace();
+
+        if (GUILayout.Button("Change texture source"))
+            _textureSourceEditor.ShowContextMenu(state);
+
         EditorGUILayout.EndHorizontal();
+
+        _textureSourceEditor.Draw(state);
+
         EditorGUILayout.Space();
 
         // Draw panorama preview
-        var previewTexture = state.panoramaTexture;
+
+        var previewTexture = state.GetComponent<TextureSource>().loadedTexture;
         if (previewTexture == null)
         {
             previewTexture = EditorGUIUtility.whiteTexture;
         }
         EditorGUI.DrawPreviewTexture(EditorGUILayout.GetControlRect(false, 150.0f), previewTexture, null, ScaleMode.ScaleToFit);
+
+
         EditorGUILayout.Space();
 
+        GUILayout.Label("Actions: ", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
 
         if (GUILayout.Button("Focus camera", GUILayout.Height(50)))
@@ -175,7 +192,6 @@ public class StateEditorWindow : EditorWindow
             {
                 StateEditor.StateGraphRenderer.targetState = null;
                 _currentConnection = null;
-                GUIUtility.GetControlID(FocusType.Keyboard);
             }
             else
             {
@@ -192,10 +208,15 @@ public class StateEditorWindow : EditorWindow
         // Draw connections list
         GUILayout.Label("Connections: ", EditorStyles.boldLabel);
 
+        _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
+
         var connections = state.GetComponents<Connection>();
 
         foreach (var connection in connections)
         {
+            if (connection.destination == null)
+                continue;
+
             GUIStyle buttonStyle = ToggleButtonStyleNormal;
             if (_connectionsEditMode && _currentConnection == connection)
                 buttonStyle = ToggleButtonStyleToggled;
@@ -216,6 +237,9 @@ public class StateEditorWindow : EditorWindow
                 }
             }
         }
+
+        EditorGUILayout.EndScrollView();
+
         EditorGUILayout.Space();
 
         GUILayout.FlexibleSpace();
@@ -281,6 +305,9 @@ public class StateEditorWindow : EditorWindow
         Connection connectionFirst = null;
         foreach (var connecton in firstStateConnections)
         {
+            if (connecton.destination == null)
+                continue;
+
             if (connecton.destination.origin == secondState)
                 connectionFirst = connecton;
         }
@@ -288,6 +315,9 @@ public class StateEditorWindow : EditorWindow
         Connection connectionSecond = null;
         foreach (var connecton in seconsStateConnections)
         {
+            if (connecton.destination == null)
+                continue;
+
             if (connecton.destination.origin == firstState)
                 connectionSecond = connecton;
         }
@@ -296,8 +326,8 @@ public class StateEditorWindow : EditorWindow
         {
             var directionToSecond = secondState.transform.position - firstState.transform.position;
 
-            connectionFirst = firstState.gameObject.AddComponent<Connection>();
-            connectionSecond = secondState.gameObject.AddComponent<Connection>();
+            connectionFirst = Undo.AddComponent<Connection>(firstState.gameObject);
+            connectionSecond = Undo.AddComponent<Connection>(secondState.gameObject);
 
             connectionFirst.destination = connectionSecond;
             connectionFirst.orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
@@ -308,10 +338,10 @@ public class StateEditorWindow : EditorWindow
         else
         {
             if (connectionFirst != null)
-                DestroyImmediate(connectionFirst);
+                Undo.DestroyObjectImmediate(connectionFirst);
 
             if (connectionSecond != null)
-                DestroyImmediate(connectionSecond);
+                Undo.DestroyObjectImmediate(connectionSecond);
         }
     }
 }

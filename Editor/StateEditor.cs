@@ -40,6 +40,15 @@ public class StateEditor
 
     static StateEditor()
     {
+        Undo.undoRedoPerformed += () =>
+        {
+            var states = GameObject.FindObjectsOfType<State>();
+            foreach (var state in states)
+            {
+                state.Reload();
+            }
+        };
+
         // Find view sphere prefab
         ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
         Assert.IsNotNull(ViewSpherePrefab);

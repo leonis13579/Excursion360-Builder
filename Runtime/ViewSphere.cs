@@ -29,8 +29,12 @@ public class ViewSphere : MonoBehaviour
      */
     public float transitionSpeed = 2.0f;
 
-    private State _currentState;
-    private State _nextState;
+    private State _currentState = null;
+    private TextureSource _currentTextureSource = null;
+
+    private State _nextState = null;
+    private TextureSource _nextTextureSource = null;
+
     private float _transition;
 
     private Renderer _renderer;
@@ -45,7 +49,7 @@ public class ViewSphere : MonoBehaviour
 
         Assert.IsNotNull(startState);
         _currentState = startState;
-        _nextState = null;
+        PrepareState(_currentState, ref _currentTextureSource);
 
         SpawnConnections();
     }
@@ -60,9 +64,13 @@ public class ViewSphere : MonoBehaviour
         if (_nextState != null)
         {
             _transition += Time.deltaTime;
+
             if (_transition >= 1.0f) {
+                _currentTextureSource.inUse = false;
                 _currentState = _nextState;
+                _currentTextureSource = _nextTextureSource;
                 _nextState = null;
+                _nextTextureSource = null;
                 _transition = 0.0f;
 
                 SpawnConnections();
@@ -80,6 +88,8 @@ public class ViewSphere : MonoBehaviour
         ClearConnections();
 
         _nextState = nextState;
+        PrepareState(_nextState, ref _nextTextureSource);
+
         _transition = 0.0f;
     }
 
@@ -118,16 +128,16 @@ public class ViewSphere : MonoBehaviour
         _renderer.GetPropertyBlock(_materialProperties);
 
         // Set main texture and orientation
-        _materialProperties.SetTexture("_MainTex", _currentState.panoramaTexture);
+        _materialProperties.SetTexture("_MainTex", _currentTextureSource.loadedTexture);
 
         var mr = _currentState.transform.rotation;
         _materialProperties.SetVector("_MainOrientation", new Vector4(
             mr.x, mr.y, mr.z, mr.w));
 
-        if (_nextState != null)
+        if (_nextState != null && _nextTextureSource != null)
         {
             // Set next texture and orientation
-            _materialProperties.SetTexture("_NextTex", _nextState.panoramaTexture);
+            _materialProperties.SetTexture("_NextTex", _nextTextureSource.loadedTexture);
 
             var nr = _nextState.transform.rotation;
             _materialProperties.SetVector("_NextOrientation", new Vector4(
@@ -138,5 +148,19 @@ public class ViewSphere : MonoBehaviour
         _materialProperties.SetFloat("_Transition", _transition);
 
         _renderer.SetPropertyBlock(_materialProperties);
+    }
+
+    private void PrepareState(State state, ref TextureSource textureSource)
+    {
+        textureSource = state.GetComponent<TextureSource>();
+        textureSource.inUse = true;
+        StartCoroutine(textureSource.LoadTexture());
+
+        var connections = state.GetComponents<Connection>();
+        foreach (var connection in connections)
+        {
+            if (connection.destination)
+                StartCoroutine(connection.destination.GetComponent<TextureSource>().LoadTexture());
+        }
     }
 }
