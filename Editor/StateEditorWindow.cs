@@ -68,7 +68,7 @@ public class StateEditorWindow : EditorWindow
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Create new state", GUILayout.Height(50)))
         {
-            var newObject = PrefabUtility.InstantiatePrefab(StateEditor.StatePrefab) as GameObject;
+            var newObject = PrefabUtility.InstantiatePrefab(TourEditor.StatePrefab) as GameObject;
             SelectObject(newObject);
             Undo.RegisterCreatedObjectUndo(newObject, "Undo state creation");
         }
@@ -141,7 +141,7 @@ public class StateEditorWindow : EditorWindow
         var state = _selectedStates[0];
 
         if (_connectionsEditMode)
-            StateEditor.StateGraphRenderer.targetState = state;
+            TourEditor.StateGraphRenderer.targetState = state;
 
         // Draw title edit field
         GUILayout.Label("State title: ", EditorStyles.boldLabel);
@@ -190,12 +190,12 @@ public class StateEditorWindow : EditorWindow
         { 
             if (_connectionsEditMode)
             {
-                StateEditor.StateGraphRenderer.targetState = null;
+                TourEditor.StateGraphRenderer.targetState = null;
                 _currentConnection = null;
             }
             else
             {
-                StateEditor.StateGraphRenderer.targetState = state;
+                TourEditor.StateGraphRenderer.targetState = state;
             }
 
             _connectionsEditMode = !_connectionsEditMode;

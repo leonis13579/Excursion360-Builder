@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 
 [InitializeOnLoad]
-public class StateEditor
+public class TourEditor
 {
     /**
      * @brief Main viewer prefab
@@ -32,13 +32,14 @@ public class StateEditor
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
 
-    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build Desktop";
+    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
+    private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android";
     private const string MENU_ITEM_EXPORT_TOUR = GROUP_NAME + "/Export Tour";
 
     private static bool _areConnectionsVisible;
     private static bool _areLabelsVisible;
 
-    static StateEditor()
+    static TourEditor()
     {
         Undo.undoRedoPerformed += () =>
         {
@@ -112,7 +113,13 @@ public class StateEditor
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);
     }
 
-    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 41)]
+    [MenuItem(MENU_ITEM_BUILD_ANDROID, false, 41)]
+    private static void MenuItemBuildAndroid()
+    {
+        ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
+    }
+
+    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 50)]
     static void MenuShowExportWindow()
     {
         TourExporter.ExportTour();
