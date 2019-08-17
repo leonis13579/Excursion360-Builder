@@ -100,7 +100,7 @@ public class TextureSourceEditor
 
         TextureSource textureSource = state.GetComponent<TextureSource>();
         if (textureSource == null)
-            textureSource = Undo.AddComponent<FileTextureSource>(state.gameObject);
+            textureSource = Undo.AddComponent<FileImageSource>(state.gameObject);
 
         _currentTextureSourceType = textureSource.GetType();
 

@@ -8,7 +8,7 @@ using UnityEngine;
 
 using UnityEditor;
 
-namespace TourConfig
+namespace Exported
 {
     [Serializable]
     class SphericalDirection
@@ -26,10 +26,10 @@ namespace TourConfig
     [Serializable]
     class State
     {
-        public string id = "state";
-        public string title = "";
-        public string url = "";
-        public string type = "image";
+        public string id;
+        public string title;
+        public string url;
+        public string type;
         public SphericalDirection viewDirection = new SphericalDirection();
         public Vector3 rotation = Vector3.zero;
 
@@ -44,60 +44,72 @@ namespace TourConfig
     }
 }
 
-[ExecuteInEditMode]
-public class StateExporter : EditorWindow
+public class TourExporter
 {
-    private UnityEngine.Object _initialStateObject;
-
-    void ExportTour(State initialState)
+    public static void ExportTour()
     {
-        State[] states = FindObjectsOfType<State>();
+        Exported.Tour tour = new Exported.Tour();
 
+        // Select path
+        string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
+        if (path.Length == 0)
+            return;
+
+        // Find first state
+        if (Tour.Instance == null)
+        { 
+            EditorUtility.DisplayDialog("Error", "There is no tour object on this scene!", "Ok");
+            return;
+        }
+
+        State firstState = Tour.Instance.firstState;
+        if (firstState == null)
+        {
+            EditorUtility.DisplayDialog("Error", "First state is not selected!", "Ok");
+            return;
+        }
+
+        // Find all states
+        State[] states = GameObject.FindObjectsOfType<State>();
         if (states.Length == 0)
         {
             EditorUtility.DisplayDialog("Error", "There is no states on this scene to export!", "Ok");
             return;
         }
 
-        // Input path
-        string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
-        if (path.Length == 0)
-        {
-            //EditorUtility.DisplayDialog("Error", "Invalid path!", "Ok");
-            return;
-        }
-
         // Pre process states
-        Dictionary<string, string> titleToId = new Dictionary<string, string>();
-
         UpdateProcess(0, states.Length);
 
-        TourConfig.Tour tour = new TourConfig.Tour();
+        Dictionary<int, string> stateIds = new Dictionary<int, string>();
 
         for (int i = 0; i < states.Length; ++i)
         {
             var state = states[i];
 
-            TourConfig.State exportedState = new TourConfig.State
+            TextureSource textureSource = state.GetComponent<TextureSource>();
+            if (textureSource == null)
+            {
+                EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+                return;
+            }
+
+            Exported.State exportedState = new Exported.State
             {
                 id = "state_" + i,
                 title = state.title,
+                url = textureSource.Export(path, "state_" + i),
+                type = textureSource.GetSourceType().ToString().ToLower(),
                 rotation = state.transform.rotation.eulerAngles
             };
 
+            stateIds.Add(state.GetInstanceID(), exportedState.id);
             tour.states.Add(exportedState);
-            titleToId.Add(state.title, exportedState.id);
-
-            string sourcePath = "";//AssetDatabase.GetAssetPath(state.panoramaTexture);
-
-            exportedState.url = "state_" + i + Path.GetExtension(sourcePath);
-
-            File.Copy(sourcePath, path + "/" + exportedState.url);
 
             UpdateProcess(i + 1, states.Length);
         }
 
-        titleToId.TryGetValue(initialState.title, out tour.firstStateId);
+        // Assign first state id
+        stateIds.TryGetValue(firstState.GetInstanceID(), out tour.firstStateId);
 
         // Process links
         for (int i = 0; i < states.Length; ++i)
@@ -107,20 +119,18 @@ public class StateExporter : EditorWindow
 
             Connection[] connections = state.gameObject.GetComponents<Connection>();
             if (connections == null)
-            {
                 continue;
-            }
 
             foreach (var connection in connections)
             {
-                if (!titleToId.TryGetValue(connection.origin.title, out string otherId))
+                if (!stateIds.TryGetValue(connection.origin.GetInstanceID(), out string otherId))
                 {
                     continue;
                 }
 
                 Vector3 direction = (connection.orientation * Vector3.forward).normalized;
 
-                exportedState.links.Add(new TourConfig.StateLink()
+                exportedState.links.Add(new Exported.StateLink()
                 {
                     id = otherId,
                     o = Mathf.Acos(direction.z),
@@ -129,28 +139,11 @@ public class StateExporter : EditorWindow
             }
         }
 
+        // Serialize and write
         File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour));
 
+        // Finish
         EditorUtility.ClearProgressBar();
-    }
-
-    void OnGUI()
-    {
-        EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("Initial state");
-        _initialStateObject = EditorGUILayout.ObjectField(_initialStateObject, typeof(State), true);
-        EditorGUILayout.EndHorizontal();
-
-        if (GUILayout.Button("Export"))
-        {
-            if (_initialStateObject == null) {
-                ShowNotification(new GUIContent("No initial state selected"));
-            }
-            else
-            {
-                ExportTour(_initialStateObject as State);
-            }
-        }
     }
 
     static void UpdateProcess(int current, int target)

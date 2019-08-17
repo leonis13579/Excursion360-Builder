@@ -115,7 +115,7 @@ public class StateEditor
     [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 41)]
     static void MenuShowExportWindow()
     {
-        EditorWindow.GetWindowWithRect<StateExporter>(new Rect(0, 0, 250, 100));
+        TourExporter.ExportTour();
     }
 
     private static void SetConnectionsVisible(bool visible)

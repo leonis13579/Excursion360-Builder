@@ -35,7 +35,7 @@ public class State : MonoBehaviour
 #if UNITY_EDITOR
         TextureSource textureSource = GetComponent<TextureSource>();
         if (textureSource == null)
-            gameObject.AddComponent<FileTextureSource>();
+            gameObject.AddComponent<FileImageSource>();
 
         ReloadTexture();
 #endif

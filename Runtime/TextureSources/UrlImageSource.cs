@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class UrlTextureSource : TextureSource
+public class UrlImageSource : TextureSource
 {
     [TextArea]
     public string textureUrl = "";
 
     private string _currentUrl = null;
     private Texture _currentTexture = null;
+
+    public override SourceType GetSourceType()
+    {
+        return SourceType.Image;
+    }
 
     public override IEnumerator LoadTexture()
     {
@@ -40,4 +45,11 @@ public class UrlTextureSource : TextureSource
 
         loadedTexture = _currentTexture;
     }
+
+#if UNITY_EDITOR
+    public override string Export(string destination, string stateName)
+    {
+        return textureUrl;
+    }
+#endif
 }

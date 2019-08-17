@@ -22,7 +22,7 @@ public class Tour : MonoBehaviour
 
     private static Tour _instance;
 
-    public State startState;
+    public State firstState;
     public Marker markerPrefab;
 
     public Texture defaultTexture;
@@ -66,8 +66,8 @@ public class Tour : MonoBehaviour
         _renderer = GetComponentInChildren<Renderer>();
         Assert.IsNotNull(_renderer);
 
-        Assert.IsNotNull(startState);
-        _currentState = startState;
+        Assert.IsNotNull(firstState);
+        _currentState = firstState;
         PrepareState(_currentState, ref _currentTextureSource);
 
         SpawnConnections();

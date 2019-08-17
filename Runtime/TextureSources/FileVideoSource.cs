@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
@@ -22,6 +23,11 @@ public class FileVideoSource : TextureSource
 
     private VideoPlayer _currentVideoPlayer = null;
     private RenderTexture _currentRenderTexture = null;
+
+    public override SourceType GetSourceType()
+    {
+        return SourceType.Video;
+    }
 
     public override IEnumerator LoadTexture()
     {
@@ -80,6 +86,17 @@ public class FileVideoSource : TextureSource
             Tour.Instance.videoPlayerPool.Release(_currentVideoPlayer);
         }
     }
+
+#if UNITY_EDITOR
+    public override string Export(string destination, string stateName)
+    {
+        string path = AssetDatabase.GetAssetPath(videoClip);
+        string filename = stateName + Path.GetExtension(path);
+
+        File.Copy(path, Path.Combine(destination, filename));
+        return filename;
+    }
+#endif
 
     private void GeneratePreview()
     {

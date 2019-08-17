@@ -1,9 +1,19 @@
 ﻿using System.Collections;
+
+#if UNITY_EDITOR
 using UnityEngine;
+#endif
 
 [DisallowMultipleComponent]
 public abstract class TextureSource : MonoBehaviour
 {
+    public enum SourceType
+    {
+        Image,
+        Video,
+        Stream
+    }
+
     public Texture loadedTexture { 
         protected set
         {
@@ -39,6 +49,8 @@ public abstract class TextureSource : MonoBehaviour
     private bool _inUse = false;
     private Texture _loadedTexture = null;
 
+    public abstract SourceType GetSourceType();
+
     public abstract IEnumerator LoadTexture();
 
     protected virtual void OnStartUsing()
@@ -48,4 +60,8 @@ public abstract class TextureSource : MonoBehaviour
     protected virtual void OnStopUsing()
     {
     }
+
+#if UNITY_EDITOR
+    public abstract string Export(string destination, string stateName);
+#endif
 }
