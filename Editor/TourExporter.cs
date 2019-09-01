@@ -48,107 +48,144 @@ public class TourExporter
 {
     public static void ExportTour()
     {
-        Exported.Tour tour = new Exported.Tour();
-
-        // Select path
-        string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
-        if (path.Length == 0)
-            return;
-
-        // Find first state
-        if (Tour.Instance == null)
-        { 
-            EditorUtility.DisplayDialog("Error", "There is no tour object on this scene!", "Ok");
-            return;
-        }
-
-        State firstState = Tour.Instance.firstState;
-        if (firstState == null)
+        try
         {
-            EditorUtility.DisplayDialog("Error", "First state is not selected!", "Ok");
-            return;
-        }
+            Exported.Tour tour = new Exported.Tour();
 
-        // Find all states
-        State[] states = GameObject.FindObjectsOfType<State>();
-        if (states.Length == 0)
-        {
-            EditorUtility.DisplayDialog("Error", "There is no states on this scene to export!", "Ok");
-            return;
-        }
+            // Select path
+            string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
+            if (path.Length == 0)
+                return;
 
-        // Pre process states
-        UpdateProcess(0, states.Length);
-
-        Dictionary<int, string> stateIds = new Dictionary<int, string>();
-
-        for (int i = 0; i < states.Length; ++i)
-        {
-            var state = states[i];
-
-            TextureSource textureSource = state.GetComponent<TextureSource>();
-            if (textureSource == null)
+            if (!EditorUtility.DisplayDialog("Warning", "All content in folder will be deleted!", "Ok, delete", "Cancel"))
             {
-                EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+                EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
                 return;
             }
 
-            Exported.State exportedState = new Exported.State
+            var files = Directory.GetFiles(path);
+            for (int i = 0; i < files.Length; i++)
             {
-                id = "state_" + i,
-                title = state.title,
-                url = textureSource.Export(path, "state_" + i),
-                type = textureSource.GetSourceType().ToString().ToLower(),
-                rotation = state.transform.rotation.eulerAngles
-            };
-
-            stateIds.Add(state.GetInstanceID(), exportedState.id);
-            tour.states.Add(exportedState);
-
-            UpdateProcess(i + 1, states.Length);
-        }
-
-        // Assign first state id
-        stateIds.TryGetValue(firstState.GetInstanceID(), out tour.firstStateId);
-
-        // Process links
-        for (int i = 0; i < states.Length; ++i)
-        {
-            var state = states[i];
-            var exportedState = tour.states[i];
-
-            Connection[] connections = state.gameObject.GetComponents<Connection>();
-            if (connections == null)
-                continue;
-
-            foreach (var connection in connections)
-            {
-                if (!stateIds.TryGetValue(connection.origin.GetInstanceID(), out string otherId))
+                var filePath = files[i];
+                UpdateProcess(i, files.Length, "Delete old files", filePath);
+                try
                 {
+                    File.Delete(filePath);
+                } catch (Exception ex)
+                {
+                    EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
+                    return;
+                }
+            }
+
+            // Find first state
+            if (Tour.Instance == null)
+            {
+                EditorUtility.DisplayDialog("Error", "There is no tour object on this scene!", "Ok");
+                return;
+            }
+
+            State firstState = Tour.Instance.firstState;
+            if (firstState == null)
+            {
+                EditorUtility.DisplayDialog("Error", "First state is not selected!", "Ok");
+                return;
+            }
+
+            // Find all states
+            State[] states = GameObject.FindObjectsOfType<State>();
+            if (states.Length == 0)
+            {
+                EditorUtility.DisplayDialog("Error", "There is no states on this scene to export!", "Ok");
+                return;
+            }
+            Debug.Log($"Finded {states.Length} states");
+            // Pre process states
+            UpdateProcess(0, states.Length, "Exporting", "");
+
+            Dictionary<int, string> stateIds = new Dictionary<int, string>();
+
+            for (int i = 0; i < states.Length; ++i)
+            {
+                var state = states[i];
+
+                TextureSource textureSource = state.GetComponent<TextureSource>();
+                if (textureSource == null)
+                {
+                    EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+                    return;
+                }
+
+                Exported.State exportedState = new Exported.State
+                {
+                    id = "state_" + i,
+                    title = state.title,
+                    url = textureSource.Export(path, "state_" + i),
+                    type = textureSource.GetSourceType().ToString().ToLower(),
+                    rotation = state.transform.rotation.eulerAngles
+                };
+
+                stateIds.Add(state.GetInstanceID(), exportedState.id);
+                tour.states.Add(exportedState);
+
+                UpdateProcess(i + 1, states.Length, "Exporting" ,$"{i+1}/{states.Length}: {state.title}");
+            }
+
+            // Assign first state id
+            stateIds.TryGetValue(firstState.GetInstanceID(), out tour.firstStateId);
+
+            // Process links
+            for (int i = 0; i < states.Length; ++i)
+            {
+                var state = states[i];
+                var exportedState = tour.states[i];
+
+                Debug.Log(state.title);
+
+                Connection[] connections = state.gameObject.GetComponents<Connection>();
+                if (connections == null || connections.Length == 0)
+                {
+                    EditorUtility.DisplayDialog("Warning", $"State {state.title} does not have connections!", "Ok");
                     continue;
                 }
 
-                Vector3 direction = (connection.orientation * Vector3.forward).normalized;
-
-                exportedState.links.Add(new Exported.StateLink()
+                foreach (var connection in connections)
                 {
-                    id = otherId,
-                    o = Mathf.Acos(direction.z),
-                    f = Mathf.Atan2(direction.y, direction.x)
-                });
+                    Debug.Log($"{connection.origin.title} -- {connection.destination.origin.title}");
+                    if (!stateIds.TryGetValue(connection.destination.origin.GetInstanceID(), out string otherId))
+                    {
+                        EditorUtility.DisplayDialog("Warning", $"State {state.title} linked to {connection.destination.origin.title}, but id not found", "Ok");
+                        continue;
+                    }
+
+                    Vector3 direction = (connection.orientation * Vector3.forward).normalized;
+
+                    exportedState.links.Add(new Exported.StateLink()
+                    {
+                        id = otherId,
+                        o = Mathf.Acos(direction.z),
+                        f = Mathf.Atan2(direction.y, direction.x)
+                    });
+                }
             }
+
+            // Serialize and write
+            File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour, true));
         }
-
-        // Serialize and write
-        File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour));
-
+        catch (Exception ex)
+        {
+            EditorUtility.DisplayDialog("Error", $"Error while exporting tour\n{ex.Message}\n{ex.StackTrace}", "Ok");
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+        }
         // Finish
-        EditorUtility.ClearProgressBar();
     }
 
-    static void UpdateProcess(int current, int target)
+    static void UpdateProcess(int current, int target, string title, string message)
     {
-        EditorUtility.DisplayProgressBar("Exporting", "Please wait...", (float)current/ (float)target);
+        EditorUtility.DisplayProgressBar(title, message, current / (float)target);
     }
 }
 
