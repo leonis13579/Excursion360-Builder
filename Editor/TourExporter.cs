@@ -18,9 +18,10 @@ namespace Exported
     }
 
     [Serializable]
-    class StateLink : SphericalDirection
+    class StateLink
     {
         public string id = "state";
+        public Quaternion rotation;
     }
 
     [Serializable]
@@ -163,8 +164,7 @@ public class TourExporter
                     exportedState.links.Add(new Exported.StateLink()
                     {
                         id = otherId,
-                        o = Mathf.Acos(direction.z),
-                        f = Mathf.Atan2(direction.y, direction.x)
+                        rotation = connection.orientation
                     });
                 }
             }
