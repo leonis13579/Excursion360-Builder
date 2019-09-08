@@ -11,13 +11,6 @@ using UnityEditor;
 namespace Exported
 {
     [Serializable]
-    class SphericalDirection
-    {
-        public float f = 0.0f;
-        public float o = 0.0f;
-    }
-
-    [Serializable]
     class StateLink
     {
         public string id = "state";
@@ -31,9 +24,8 @@ namespace Exported
         public string title;
         public string url;
         public string type;
-        public SphericalDirection viewDirection = new SphericalDirection();
-        public Vector3 rotation = Vector3.zero;
-
+        public Vector3 rotation;
+        public Quaternion pictureRotation;
         public List<StateLink> links = new List<StateLink>();
     }
 
@@ -123,7 +115,8 @@ public class TourExporter
                     title = state.title,
                     url = textureSource.Export(path, "state_" + i),
                     type = textureSource.GetSourceType().ToString().ToLower(),
-                    rotation = state.transform.rotation.eulerAngles
+                    rotation = state.transform.rotation.eulerAngles,
+                    pictureRotation = state.transform.rotation
                 };
 
                 stateIds.Add(state.GetInstanceID(), exportedState.id);
