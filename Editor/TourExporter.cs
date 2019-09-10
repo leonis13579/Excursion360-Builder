@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 #if UNITY_EDITOR
 
@@ -15,6 +16,7 @@ namespace Exported
     {
         public string id = "state";
         public Quaternion rotation;
+        public int colorScheme;
     }
 
     [Serializable]
@@ -34,6 +36,7 @@ namespace Exported
     {
         public string firstStateId = "state";
         public List<State> states = new List<State>();
+        public Color[] colorSchemes;
     }
 }
 
@@ -78,6 +81,8 @@ public class TourExporter
                 return;
             }
 
+            tour.colorSchemes = Tour.Instance.colorSchemes.Select(cs => cs.color).ToArray();
+
             State firstState = Tour.Instance.firstState;
             if (firstState == null)
             {
@@ -113,7 +118,7 @@ public class TourExporter
                 {
                     id = "state_" + i,
                     title = state.title,
-                    url = textureSource.Export(path, "state_" + i),
+                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(path, "state_" + i)}",
                     type = textureSource.GetSourceType().ToString().ToLower(),
                     rotation = state.transform.rotation.eulerAngles,
                     pictureRotation = state.transform.rotation
@@ -157,7 +162,8 @@ public class TourExporter
                     exportedState.links.Add(new Exported.StateLink()
                     {
                         id = otherId,
-                        rotation = connection.orientation
+                        rotation = connection.orientation,
+                        colorScheme = connection.colorScheme
                     });
                 }
             }

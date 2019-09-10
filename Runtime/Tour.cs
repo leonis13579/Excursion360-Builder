@@ -27,6 +27,7 @@ public class Tour : MonoBehaviour
 
     public Texture defaultTexture;
 
+
     public VideoPlayerPool videoPlayerPool 
     { 
         get
@@ -46,6 +47,8 @@ public class Tour : MonoBehaviour
      * @brief Transition speed in seconds
      */
     public float transitionSpeed = 2.0f;
+    public ColorScheme[] colorSchemes;
+    public string linkPrefix;
 
     private State _currentState = null;
     private TextureSource _currentTextureSource = null;
@@ -122,7 +125,8 @@ public class Tour : MonoBehaviour
             marker.name = "Marker to " + connection.destination.origin.title;
             marker.connection = connection;
             marker.transform.localPosition = connection.orientation * Vector3.forward;
-
+            var markerRenderer = marker.GetComponent<Renderer>();
+            markerRenderer.material.SetColor("_Color", colorSchemes[connection.colorScheme].color);
             _markers.Add(marker);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 #if UNITY_EDITOR
 
@@ -236,6 +237,11 @@ public class StateEditorWindow : EditorWindow
                     SelectObject(connection.destination.origin.gameObject);
                 }
             }
+
+            var schemes = Tour.Instance.colorSchemes;
+            var schemeNames = schemes.Select(s => s.name).ToArray();
+            connection.colorScheme = EditorGUILayout.Popup("Color scheme", connection.colorScheme, schemeNames);
+            EditorGUILayout.Space();
         }
 
         EditorGUILayout.EndScrollView();

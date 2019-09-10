@@ -8,6 +8,8 @@
  *     \__\/                       \/__/
  * origin ^------------------------^ destination
  */
+
+ 
 public class Connection : MonoBehaviour
 {
     /**
@@ -23,6 +25,8 @@ public class Connection : MonoBehaviour
             return _origin;
         } 
     }
+    [HideInInspector]
+    public int colorScheme = 0;
 
     /**
      * @brief Orientation of marker in origin
