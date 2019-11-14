@@ -47,7 +47,7 @@ public class Tour : MonoBehaviour
      * @brief Transition speed in seconds
      */
     public float transitionSpeed = 2.0f;
-    public ColorScheme[] colorSchemes;
+    public ColorScheme[] colorSchemes = new ColorScheme[] { new ColorScheme { color = Color.red, name = "default" } };
     public string linkPrefix;
 
     private State _currentState = null;
@@ -70,6 +70,8 @@ public class Tour : MonoBehaviour
         Assert.IsNotNull(_renderer);
 
         Assert.IsNotNull(firstState);
+
+        Assert.IsTrue(colorSchemes.Length > 0, "Need minimum 1 element in colors collection");
         _currentState = firstState;
         PrepareState(_currentState, ref _currentTextureSource);
 

@@ -77,6 +77,8 @@ public class TourEditor
     [MenuItem(MENU_ITEM_NEW_TOUR, false, 0)]
     static void MenuItemNewTour()
     {
+        ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
+        Assert.IsNotNull(ViewSpherePrefab);
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
         RenderSettings.skybox = null;
