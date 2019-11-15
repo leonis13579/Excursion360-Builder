@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
+using Packages.tour_creator.Editor;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -32,6 +33,7 @@ public class TourEditor
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
 
+    private const string MENU_ITEM_BUILD_WEB = GROUP_NAME + "/Build For WEB";
     private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
     private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android";
     private const string MENU_ITEM_EXPORT_TOUR = GROUP_NAME + "/Export Tour";
@@ -87,7 +89,7 @@ public class TourEditor
         {
             GameObject.DestroyImmediate(gameObject);
         }
-        
+
         PrefabUtility.InstantiatePrefab(ViewSpherePrefab);
     }
 
@@ -109,7 +111,15 @@ public class TourEditor
         SetLabelsVisible(!_areLabelsVisible);
     }
 
-    [MenuItem(MENU_ITEM_BUILD_DESKTOP, false,40)]
+    [MenuItem(MENU_ITEM_BUILD_WEB, false, 39)]
+    private static void MenuItemBuildWeb()
+    {
+        if (!TourExporter.TryGetTargetFolder(out var folderPath))
+            return;
+        WebBuilder.Build(folderPath);
+    }
+
+    [MenuItem(MENU_ITEM_BUILD_DESKTOP, false, 40)]
     private static void MenuItemBuildDesktop()
     {
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);

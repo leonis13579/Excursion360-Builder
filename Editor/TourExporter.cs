@@ -42,37 +42,15 @@ namespace Exported
 
 public class TourExporter
 {
+    private static string lastFolderPath = "";
     public static void ExportTour()
     {
         try
         {
             Exported.Tour tour = new Exported.Tour();
 
-            // Select path
-            string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
-            if (path.Length == 0)
+            if (!TryGetTargetFolder(out var path))
                 return;
-
-            if (!EditorUtility.DisplayDialog("Warning", "All content in folder will be deleted!", "Ok, delete", "Cancel"))
-            {
-                EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
-                return;
-            }
-
-            var files = Directory.GetFiles(path);
-            for (int i = 0; i < files.Length; i++)
-            {
-                var filePath = files[i];
-                UpdateProcess(i, files.Length, "Delete old files", filePath);
-                try
-                {
-                    File.Delete(filePath);
-                } catch (Exception ex)
-                {
-                    EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
-                    return;
-                }
-            }
 
             // Find first state
             if (Tour.Instance == null)
@@ -127,7 +105,7 @@ public class TourExporter
                 stateIds.Add(state.GetInstanceID(), exportedState.id);
                 tour.states.Add(exportedState);
 
-                UpdateProcess(i + 1, states.Length, "Exporting" ,$"{i+1}/{states.Length}: {state.title}");
+                UpdateProcess(i + 1, states.Length, "Exporting", $"{i + 1}/{states.Length}: {state.title}");
             }
 
             // Assign first state id
@@ -180,6 +158,41 @@ public class TourExporter
             EditorUtility.ClearProgressBar();
         }
         // Finish
+    }
+
+    public static bool TryGetTargetFolder(out string folderPath)
+    {
+        // Select path
+        folderPath = lastFolderPath = EditorUtility.OpenFolderPanel("Select folder for tour", lastFolderPath, "");
+        if (folderPath.Length == 0)
+        {
+            EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
+            return false;
+        }
+
+        if (!EditorUtility.DisplayDialog("Warning", "All content in folder will be deleted!", "Ok, delete", "Cancel"))
+        {
+            EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
+            return false;
+        }
+
+        var files = Directory.GetFiles(folderPath);
+        for (int i = 0; i < files.Length; i++)
+        {
+            var filePath = files[i];
+            UpdateProcess(i, files.Length, "Delete old files", filePath);
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     static void UpdateProcess(int current, int target, string title, string message)
