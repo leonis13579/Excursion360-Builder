@@ -69,32 +69,44 @@ namespace Packages.tour_creator.Editor
                         EditorUtility.DisplayProgressBar("Downloading", "Downloading viewer", w.downloadProgress);
                     }
                     var archiveStream = new MemoryStream(w.downloadHandler.data);
-                    using var zipInputStream = new ZipInputStream(archiveStream);
-                    while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
+                    using (var zipInputStream = new ZipInputStream(archiveStream))
                     {
-                        var entryFileName = zipEntry.Name;
-                        var buffer = new byte[4096];
 
-                        // Manipulate the output filename here as desired.
-                        var fullZipToPath = Path.Combine(folderPath, entryFileName);
-                        var directoryName = Path.GetDirectoryName(fullZipToPath);
-                        if (directoryName.Length > 0)
-                            Directory.CreateDirectory(directoryName);
-
-                        // Skip directory entry
-                        if (Path.GetFileName(fullZipToPath).Length == 0)
+                        while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
                         {
-                            continue;
+                            var entryFileName = zipEntry.Name;
+                            var buffer = new byte[4096];
+
+                            var fullZipToPath = Path.Combine(folderPath, entryFileName);
+                            var directoryName = Path.GetDirectoryName(fullZipToPath);
+                            if (directoryName.Length > 0)
+                                Directory.CreateDirectory(directoryName);
+
+                            if (Path.GetFileName(fullZipToPath).Length == 0)
+                            {
+                                continue;
+                            }
+
+                            using (FileStream streamWriter = File.Create(fullZipToPath))
+                            {
+                                StreamUtils.Copy(zipInputStream, streamWriter, buffer);
+                            }
                         }
-
-                        // Unzip file in buffered chunks. This is just as fast as unpacking
-                        // to a buffer the full size of the file, but does not waste memory.
-                        // The "using" will close the stream even if an exception occurs.
-                        using FileStream streamWriter = File.Create(fullZipToPath);
-                        StreamUtils.Copy(zipInputStream, streamWriter, buffer);
                     }
-                }
 
+                    string path = AssetDatabase.GetAssetPath(Tour.Instance.logoTexture);
+                    string filename = "logo" + Path.GetExtension(path);
+                    File.Copy(path, Path.Combine(folderPath, filename));
+
+                    var configuration = new Configuration
+                    {
+                        logoUrl = filename,
+                        sceneUrl = ""
+                    };
+                    var stringConfig = JsonUtility.ToJson(configuration);
+                    File.WriteAllText(Path.Combine(folderPath, "config.json"), stringConfig);
+                    TourExporter.ExportTour(folderPath);
+                }
             }
             finally
             {

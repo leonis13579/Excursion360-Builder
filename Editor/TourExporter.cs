@@ -8,49 +8,16 @@ using System.Linq;
 #if UNITY_EDITOR
 
 using UnityEditor;
-
-namespace Exported
-{
-    [Serializable]
-    class StateLink
-    {
-        public string id = "state";
-        public Quaternion rotation;
-        public int colorScheme;
-    }
-
-    [Serializable]
-    class State
-    {
-        public string id;
-        public string title;
-        public string url;
-        public string type;
-        public Vector3 rotation;
-        public Quaternion pictureRotation;
-        public List<StateLink> links = new List<StateLink>();
-    }
-
-    [Serializable]
-    class Tour
-    {
-        public string firstStateId = "state";
-        public List<State> states = new List<State>();
-        public Color[] colorSchemes;
-    }
-}
+using Exported = Packages.tour_creator.Editor.Protocol;
 
 public class TourExporter
 {
     private static string lastFolderPath = "";
-    public static void ExportTour()
+    public static void ExportTour(string folderPath)
     {
         try
         {
             Exported.Tour tour = new Exported.Tour();
-
-            if (!TryGetTargetFolder(out var path))
-                return;
 
             // Find first state
             if (Tour.Instance == null)
@@ -96,7 +63,7 @@ public class TourExporter
                 {
                     id = "state_" + i,
                     title = state.title,
-                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(path, "state_" + i)}",
+                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, "state_" + i)}",
                     type = textureSource.GetSourceType().ToString().ToLower(),
                     rotation = state.transform.rotation.eulerAngles,
                     pictureRotation = state.transform.rotation
@@ -147,7 +114,7 @@ public class TourExporter
             }
 
             // Serialize and write
-            File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour, true));
+            File.WriteAllText(folderPath + "/tour.json", JsonUtility.ToJson(tour, true));
         }
         catch (Exception ex)
         {

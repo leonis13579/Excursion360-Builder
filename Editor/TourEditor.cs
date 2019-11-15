@@ -131,12 +131,6 @@ public class TourEditor
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
     }
 
-    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 50)]
-    static void MenuShowExportWindow()
-    {
-        TourExporter.ExportTour();
-    }
-
     private static void SetConnectionsVisible(bool visible)
     {
         SetMenuItemEnabled(MENU_ITEM_SHOW_CONNECTIONS, visible);

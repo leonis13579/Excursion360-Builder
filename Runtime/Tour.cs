@@ -26,6 +26,7 @@ public class Tour : MonoBehaviour
     public Marker markerPrefab;
 
     public Texture defaultTexture;
+    public Texture logoTexture;
 
 
     public VideoPlayerPool videoPlayerPool 
