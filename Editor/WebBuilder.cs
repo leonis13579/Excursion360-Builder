@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using Packages.tour_creator.Editor.WebBuild;
+using Packages.tour_creator.Editor.WebBuild.GitHubAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;

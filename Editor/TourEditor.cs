@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 using Packages.tour_creator.Editor;
+using Packages.Excursion360_Builder.Editor.WebBuild;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -36,7 +37,7 @@ public class TourEditor
     private const string MENU_ITEM_BUILD_WEB = GROUP_NAME + "/Build For WEB";
     private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
     private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android";
-    private const string MENU_ITEM_EXPORT_TOUR = GROUP_NAME + "/Export Tour";
+    private const string MENU_ITEM_TEST = GROUP_NAME + "/TEST";
 
     private static bool _areConnectionsVisible;
     private static bool _areLabelsVisible;
@@ -129,6 +130,12 @@ public class TourEditor
     private static void MenuItemBuildAndroid()
     {
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
+    }
+
+    [MenuItem(MENU_ITEM_TEST, false, 42)]
+    private static void Test()
+    {
+        EditorWindow.GetWindow<BuildPacksManagerWindow>("Web build manager");
     }
 
     private static void SetConnectionsVisible(bool visible)
