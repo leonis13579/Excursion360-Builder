@@ -177,7 +177,6 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                 }
                 var parsed = JsonUtility.FromJson<ReleaseResponse>(row);
                 done(parsed);
-                yield return 123;
             }
             finally
             {
@@ -197,7 +196,6 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                     e => errorMessage = e);
                 while (downloadingTask.MoveNext())
                 {
-                    Debug.Log(downloadingTask.Current);
                     yield return downloadingTask.Current;
                 }
                 if (!string.IsNullOrEmpty(errorMessage))
