@@ -9,7 +9,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
     class BuildPack
     {
         public string Version { get; set; }
-        public string Date { get; set; }
+        public DateTime PublishDate { get; set; }
         public string Location { get; set; }
     }
 }

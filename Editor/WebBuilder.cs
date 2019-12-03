@@ -113,7 +113,6 @@ namespace Packages.tour_creator.Editor
             {
                 EditorUtility.ClearProgressBar();
             }
-
         }
 
         public static void StartBackgroundTask<T>(IEnumerator update, Action<T> end = null, Action<Exception> err = null)
