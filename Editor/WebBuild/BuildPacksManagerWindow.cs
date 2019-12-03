@@ -21,8 +21,12 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
         private string packsLocation;
         private List<BuildPack> buildPacks = new List<BuildPack>();
 
+        private string[] buildPackTags = Array.Empty<string>();
+        private int selectedbuildTagNum = 0;
 
-        private Vector2 packsScrollPosition;
+        private string outFolderPath;
+
+
         private void OnEnable()
         {
             packsLocation = Application.dataPath + "/Tour creator";
@@ -45,7 +49,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                 StartBackgroundTask(DownloadViewer(packsLocation));
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Текущие версии web просмотрщиков", EditorStyles.boldLabel);
+            GUILayout.Label("Имеющиеся версии web просмотрщиков", EditorStyles.boldLabel);
             if (GUILayout.Button("Обновить"))
             {
                 FindBuildPacks();
@@ -54,62 +58,103 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
             GUILayout.EndHorizontal();
             if (buildPacks.Count == 0)
             {
-                GUILayout.Label("Текущие версии web просмотрщиков отcутствуют", EditorStyles.label);
+                GUILayout.Label("Версии web просмотрщиков отcутствуют", EditorStyles.label);
             }
             else
             {
-                packsScrollPosition = GUILayout.BeginScrollView(packsScrollPosition);
                 foreach (var pack in buildPacks)
                 {
                     pack.IsFolded = EditorGUILayout.Foldout(pack.IsFolded, pack.Version);
                     if (pack.IsFolded)
                     {
-                        EditorGUI.indentLevel++;
-                        switch (pack.Status)
-                        {
-                            case BuildPackStatus.NotLoaded:
-                                StartBackgroundTask(DownloadReleaseInfo(pack.Id, p =>
-                                {
-                                    pack.PublishDate = p.PublishedAt;
-                                    pack.Status = BuildPackStatus.Loaded;
-                                }));
-                                pack.Status = BuildPackStatus.Loading;
-                                break;
-                            case BuildPackStatus.Loading:
-                                EditorGUILayout.LabelField($"Загрузка...");
-                                break;
-                            case BuildPackStatus.Loaded:
-                                EditorGUILayout.LabelField($"Опубликовано: {pack.PublishDate.ToString("yyyy-MM-dd")}");
-                                break;
-                            case BuildPackStatus.LoadingError:
-                                EditorGUILayout.LabelField($"Ошибка при загрузке");
-                                break;
-                            default:
-                                EditorGUILayout.LabelField($"Непредвиденная ошибка");
-                                break;
-                        }
-                        EditorGUI.indentLevel--;
+                        RenderPack(pack);
                     }
                 }
-                GUILayout.EndScrollView();
             }
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Экспорт экскурсии", EditorStyles.boldLabel);
+            selectedbuildTagNum = EditorGUILayout.Popup("Версия просмотрщика", selectedbuildTagNum, buildPackTags);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Укажите путь");
+            outFolderPath = EditorGUILayout.TextField(outFolderPath);
+            if (GUILayout.Button("Обзор"))
+            {
+                outFolderPath = EditorUtility.OpenFolderPanel("Выберете, куда вы хотите экспортировать экскурсию", outFolderPath, "");
+                Repaint();
+                SceneView.RepaintAll();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Экспортировать экскурсию"))
+            {
+                if (!TourExporter.TryGetTargetFolder(outFolderPath))
+                {
+                    return;
+                }
+                TourExporter.ExportTour(buildPacks[selectedbuildTagNum].Location, outFolderPath);
+            }
+        }
+
+        private void RenderPack(BuildPack pack)
+        {
+            EditorGUI.indentLevel++;
+            switch (pack.Status)
+            {
+                case BuildPackStatus.NotLoaded:
+                    StartBackgroundTask(DownloadReleaseInfo(pack.Id, p =>
+                    {
+                        pack.PublishDate = p.PublishedAt;
+                        pack.Status = BuildPackStatus.Loaded;
+                    }, e => pack.Status = BuildPackStatus.LoadingError));
+                    pack.Status = BuildPackStatus.Loading;
+                    break;
+                case BuildPackStatus.Loading:
+                    EditorGUILayout.LabelField($"Загрузка...");
+                    break;
+                case BuildPackStatus.Loaded:
+                    EditorGUILayout.LabelField($"Опубликовано: {pack.PublishDate.ToString("yyyy-MM-dd")}");
+                    if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "Удалить"))
+                    {
+                        File.Delete(pack.Location);
+                        FindBuildPacks();
+                    }
+                    break;
+                case BuildPackStatus.LoadingError:
+                    EditorGUILayout.LabelField($"Ошибка при загрузке");
+                    break;
+                default:
+                    EditorGUILayout.LabelField($"Непредвиденная ошибка");
+                    break;
+            }
+            EditorGUI.indentLevel--;
         }
 
         private void FindBuildPacks()
         {
             buildPacks = Directory.GetFiles(packsLocation, "web-viewer-*-*.zip")
-                .Select(fName => Regex.Match(fName, @"web-viewer-(?<tag>\S+)-(?<id>\d+).zip"))
-                .Select(match => new BuildPack
+                .Select(path => (path, match: Regex.Match(path, @"web-viewer-(?<tag>\S+)-(?<id>\d+).zip")))
+                .Select(b => new BuildPack
                 {
-                    Id = int.Parse(match.Groups["id"].Value),
-                    Version = match.Groups["tag"].Value
+                    Id = int.Parse(b.match.Groups["id"].Value),
+                    Version = b.match.Groups["tag"].Value,
+                    Location = b.path
                 })
                 .ToList();
+            buildPackTags = buildPacks.Select(p => p.Version).ToArray();
+            selectedbuildTagNum = buildPackTags
+                .Select((tag, i) => (tag, i))
+                .OrderBy(s => s.tag)
+                .FirstOrDefault()
+                .i;
         }
 
-        private IEnumerator DownloadReleaseInfo(int releaseId, Action<ReleaseResponse> done)
-            => DownloadReleaseInfo(releaseId.ToString(), done);
-        private IEnumerator DownloadReleaseInfo(string releaseId, Action<ReleaseResponse> done)
+        private IEnumerator DownloadReleaseInfo(int releaseId, Action<ReleaseResponse> done, Action<string> error)
+            => DownloadReleaseInfo(releaseId.ToString(), done, error);
+        private IEnumerator DownloadReleaseInfo(string releaseId, 
+            Action<ReleaseResponse> done,
+            Action<string> error)
         {
             try
             {
@@ -125,9 +170,14 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                         EditorUtility.DisplayProgressBar("Downloading", $"Получение информации о релизе {releaseId}", w.downloadProgress);
                     }
                     row = w.downloadHandler.text;
+                    if (w.isHttpError)
+                    {
+                        error(row);
+                    }
                 }
                 var parsed = JsonUtility.FromJson<ReleaseResponse>(row);
                 done(parsed);
+                yield return 123;
             }
             finally
             {
@@ -140,10 +190,20 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
             try
             {
                 ReleaseResponse parsed = null;
-                var downloadingTask = DownloadReleaseInfo("latest", r => parsed = r);
+                string errorMessage = null;
+                var downloadingTask = DownloadReleaseInfo(
+                    "latest",
+                    r => parsed = r,
+                    e => errorMessage = e);
                 while (downloadingTask.MoveNext())
                 {
+                    Debug.Log(downloadingTask.Current);
                     yield return downloadingTask.Current;
+                }
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
+                    yield break;
                 }
                 var targetLink = parsed.assets.FirstOrDefault(a => a.name == "build.zip");
                 if (targetLink == null)

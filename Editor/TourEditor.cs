@@ -34,10 +34,9 @@ public class TourEditor
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
 
+    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop (TODO)";
+    private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android (TODO)";
     private const string MENU_ITEM_BUILD_WEB = GROUP_NAME + "/Build For WEB";
-    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
-    private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android";
-    private const string MENU_ITEM_TEST = GROUP_NAME + "/TEST";
 
     private static bool _areConnectionsVisible;
     private static bool _areLabelsVisible;
@@ -112,14 +111,6 @@ public class TourEditor
         SetLabelsVisible(!_areLabelsVisible);
     }
 
-    [MenuItem(MENU_ITEM_BUILD_WEB, false, 39)]
-    private static void MenuItemBuildWeb()
-    {
-        if (!TourExporter.TryGetTargetFolder(out var folderPath))
-            return;
-        WebBuilder.Build(folderPath);
-    }
-
     [MenuItem(MENU_ITEM_BUILD_DESKTOP, false, 40)]
     private static void MenuItemBuildDesktop()
     {
@@ -132,8 +123,8 @@ public class TourEditor
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
     }
 
-    [MenuItem(MENU_ITEM_TEST, false, 42)]
-    private static void Test()
+    [MenuItem(MENU_ITEM_BUILD_WEB, false, 42)]
+    private static void MenuItemBuildWeb()
     {
         EditorWindow.GetWindow<BuildPacksManagerWindow>("Web build manager");
     }

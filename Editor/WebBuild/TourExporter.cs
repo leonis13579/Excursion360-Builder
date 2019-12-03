@@ -4,6 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Core;
+using Packages.tour_creator.Editor.WebBuild;
 
 #if UNITY_EDITOR
 
@@ -12,11 +15,18 @@ using Exported = Packages.tour_creator.Editor.Protocol;
 
 public class TourExporter
 {
-    private static string lastFolderPath = "";
-    public static void ExportTour(string folderPath)
+    public static void ExportTour(string viewerLocation, string folderPath)
     {
         try
         {
+            UnpackViewer(viewerLocation, folderPath);
+            if (!CopyLogo(folderPath, out var logoFileName))
+            {
+                return;
+            }
+            CreateConfigFile(folderPath, logoFileName);
+
+
             Exported.Tour tour = new Exported.Tour();
 
             // Find first state
@@ -127,19 +137,78 @@ public class TourExporter
         // Finish
     }
 
-    public static bool TryGetTargetFolder(out string folderPath)
+    private static void CreateConfigFile(string folderPath, string logoFileName)
     {
-        // Select path
-        folderPath = lastFolderPath = EditorUtility.OpenFolderPanel("Select folder for tour", lastFolderPath, "");
-        if (folderPath.Length == 0)
+        var configuration = new Configuration
         {
-            EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
+            logoUrl = logoFileName,
+            sceneUrl = ""
+        };
+        var stringConfig = JsonUtility.ToJson(configuration);
+        File.WriteAllText(Path.Combine(folderPath, "config.json"), stringConfig);
+    }
+
+    private static bool CopyLogo(string folderPath, out string logoPath)
+    {
+        logoPath = "";
+        string path = AssetDatabase.GetAssetPath(Tour.Instance.logoTexture);
+        if (string.IsNullOrEmpty(path))
+        {
+            if (!EditorUtility.DisplayDialog("Внимание", "Вы не указали логотип для перехода между локациями. Уверены, что хотите оставить логотип по умолчанию?", "Да, продолжить", "Отмена"))
+            {
+                EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+                return false;
+            }
+            logoPath = "";
+            return true;
+        }
+        string filename = "logo" + Path.GetExtension(path);
+        Debug.Log(Path.Combine(folderPath, filename));
+        File.Copy(path, Path.Combine(folderPath, filename));
+        logoPath = filename;
+        return true;
+    }
+
+    private static void UnpackViewer(string viewerLocation, string folderPath)
+    {
+        using (var fileStream = File.OpenRead(viewerLocation))
+        using (var zipInputStream = new ZipInputStream(fileStream))
+        {
+
+            while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
+            {
+                var entryFileName = zipEntry.Name;
+                var buffer = new byte[4096];
+
+                var fullZipToPath = Path.Combine(folderPath, entryFileName);
+                var directoryName = Path.GetDirectoryName(fullZipToPath);
+                if (directoryName.Length > 0)
+                    Directory.CreateDirectory(directoryName);
+
+                if (Path.GetFileName(fullZipToPath).Length == 0)
+                {
+                    continue;
+                }
+
+                using (FileStream streamWriter = File.Create(fullZipToPath))
+                {
+                    StreamUtils.Copy(zipInputStream, streamWriter, buffer);
+                }
+            }
+        }
+    }
+
+
+    public static bool TryGetTargetFolder(string folderPath)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            EditorUtility.DisplayDialog("Ошибка", "Выборанная директория не существует", "Ок");
             return false;
         }
-
-        if (!EditorUtility.DisplayDialog("Warning", "All content in folder will be deleted!", "Ok, delete", "Cancel"))
+        if (!EditorUtility.DisplayDialog("Внимание", "Все файлы в выбранной папке будут удалены, Вы уверены?", "Да, удалить", "Отмена"))
         {
-            EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
+            EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
             return false;
         }
 
@@ -147,14 +216,14 @@ public class TourExporter
         for (int i = 0; i < files.Length; i++)
         {
             var filePath = files[i];
-            UpdateProcess(i, files.Length, "Delete old files", filePath);
+            UpdateProcess(i, files.Length, "Удаление файлов", filePath);
             try
             {
                 File.Delete(filePath);
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
+                EditorUtility.DisplayDialog("Ошибка", $"Неполучается удалить файл {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ок");
                 return false;
             }
         }
