@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
+using Packages.tour_creator.Editor;
+using Packages.Excursion360_Builder.Editor.WebBuild;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -32,9 +34,9 @@ public class TourEditor
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
 
-    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
-    private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android";
-    private const string MENU_ITEM_EXPORT_TOUR = GROUP_NAME + "/Export Tour";
+    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop (TODO)";
+    private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android (TODO)";
+    private const string MENU_ITEM_BUILD_WEB = GROUP_NAME + "/Build For WEB";
 
     private static bool _areConnectionsVisible;
     private static bool _areLabelsVisible;
@@ -87,7 +89,7 @@ public class TourEditor
         {
             GameObject.DestroyImmediate(gameObject);
         }
-        
+
         PrefabUtility.InstantiatePrefab(ViewSpherePrefab);
     }
 
@@ -109,7 +111,7 @@ public class TourEditor
         SetLabelsVisible(!_areLabelsVisible);
     }
 
-    [MenuItem(MENU_ITEM_BUILD_DESKTOP, false,40)]
+    [MenuItem(MENU_ITEM_BUILD_DESKTOP, false, 40)]
     private static void MenuItemBuildDesktop()
     {
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);
@@ -121,10 +123,10 @@ public class TourEditor
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
     }
 
-    [MenuItem(MENU_ITEM_EXPORT_TOUR, false, 50)]
-    static void MenuShowExportWindow()
+    [MenuItem(MENU_ITEM_BUILD_WEB, false, 42)]
+    private static void MenuItemBuildWeb()
     {
-        TourExporter.ExportTour();
+        EditorWindow.GetWindow<BuildPacksManagerWindow>("Web build manager");
     }
 
     private static void SetConnectionsVisible(bool visible)

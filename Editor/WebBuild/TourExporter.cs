@@ -4,75 +4,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Core;
+using Packages.tour_creator.Editor.WebBuild;
 
 #if UNITY_EDITOR
 
 using UnityEditor;
-
-namespace Exported
-{
-    [Serializable]
-    class StateLink
-    {
-        public string id = "state";
-        public Quaternion rotation;
-        public int colorScheme;
-    }
-
-    [Serializable]
-    class State
-    {
-        public string id;
-        public string title;
-        public string url;
-        public string type;
-        public Vector3 rotation;
-        public Quaternion pictureRotation;
-        public List<StateLink> links = new List<StateLink>();
-    }
-
-    [Serializable]
-    class Tour
-    {
-        public string firstStateId = "state";
-        public List<State> states = new List<State>();
-        public Color[] colorSchemes;
-    }
-}
+using Exported = Packages.tour_creator.Editor.Protocol;
 
 public class TourExporter
 {
-    public static void ExportTour()
+    public static void ExportTour(string viewerLocation, string folderPath)
     {
         try
         {
+            UnpackViewer(viewerLocation, folderPath);
+            if (!CopyLogo(folderPath, out var logoFileName))
+            {
+                return;
+            }
+            CreateConfigFile(folderPath, logoFileName);
+
+
             Exported.Tour tour = new Exported.Tour();
-
-            // Select path
-            string path = EditorUtility.OpenFolderPanel("Select folder for tour", "", "");
-            if (path.Length == 0)
-                return;
-
-            if (!EditorUtility.DisplayDialog("Warning", "All content in folder will be deleted!", "Ok, delete", "Cancel"))
-            {
-                EditorUtility.DisplayDialog("Error", "Operation cancelled", "Ok");
-                return;
-            }
-
-            var files = Directory.GetFiles(path);
-            for (int i = 0; i < files.Length; i++)
-            {
-                var filePath = files[i];
-                UpdateProcess(i, files.Length, "Delete old files", filePath);
-                try
-                {
-                    File.Delete(filePath);
-                } catch (Exception ex)
-                {
-                    EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
-                    return;
-                }
-            }
 
             // Find first state
             if (Tour.Instance == null)
@@ -118,7 +73,7 @@ public class TourExporter
                 {
                     id = "state_" + i,
                     title = state.title,
-                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(path, "state_" + i)}",
+                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, "state_" + i)}",
                     type = textureSource.GetSourceType().ToString().ToLower(),
                     rotation = state.transform.rotation.eulerAngles,
                     pictureRotation = state.transform.rotation
@@ -127,7 +82,7 @@ public class TourExporter
                 stateIds.Add(state.GetInstanceID(), exportedState.id);
                 tour.states.Add(exportedState);
 
-                UpdateProcess(i + 1, states.Length, "Exporting" ,$"{i+1}/{states.Length}: {state.title}");
+                UpdateProcess(i + 1, states.Length, "Exporting", $"{i + 1}/{states.Length}: {state.title}");
             }
 
             // Assign first state id
@@ -169,7 +124,7 @@ public class TourExporter
             }
 
             // Serialize and write
-            File.WriteAllText(path + "/tour.json", JsonUtility.ToJson(tour, true));
+            File.WriteAllText(folderPath + "/tour.json", JsonUtility.ToJson(tour, true));
         }
         catch (Exception ex)
         {
@@ -180,6 +135,100 @@ public class TourExporter
             EditorUtility.ClearProgressBar();
         }
         // Finish
+    }
+
+    private static void CreateConfigFile(string folderPath, string logoFileName)
+    {
+        var configuration = new Configuration
+        {
+            logoUrl = logoFileName,
+            sceneUrl = ""
+        };
+        var stringConfig = JsonUtility.ToJson(configuration);
+        File.WriteAllText(Path.Combine(folderPath, "config.json"), stringConfig);
+    }
+
+    private static bool CopyLogo(string folderPath, out string logoPath)
+    {
+        logoPath = "";
+        string path = AssetDatabase.GetAssetPath(Tour.Instance.logoTexture);
+        if (string.IsNullOrEmpty(path))
+        {
+            if (!EditorUtility.DisplayDialog("Внимание", "Вы не указали логотип для перехода между локациями. Уверены, что хотите оставить логотип по умолчанию?", "Да, продолжить", "Отмена"))
+            {
+                EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+                return false;
+            }
+            logoPath = "";
+            return true;
+        }
+        string filename = "logo" + Path.GetExtension(path);
+        Debug.Log(Path.Combine(folderPath, filename));
+        File.Copy(path, Path.Combine(folderPath, filename));
+        logoPath = filename;
+        return true;
+    }
+
+    private static void UnpackViewer(string viewerLocation, string folderPath)
+    {
+        using (var fileStream = File.OpenRead(viewerLocation))
+        using (var zipInputStream = new ZipInputStream(fileStream))
+        {
+
+            while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
+            {
+                var entryFileName = zipEntry.Name;
+                var buffer = new byte[4096];
+
+                var fullZipToPath = Path.Combine(folderPath, entryFileName);
+                var directoryName = Path.GetDirectoryName(fullZipToPath);
+                if (directoryName.Length > 0)
+                    Directory.CreateDirectory(directoryName);
+
+                if (Path.GetFileName(fullZipToPath).Length == 0)
+                {
+                    continue;
+                }
+
+                using (FileStream streamWriter = File.Create(fullZipToPath))
+                {
+                    StreamUtils.Copy(zipInputStream, streamWriter, buffer);
+                }
+            }
+        }
+    }
+
+
+    public static bool TryGetTargetFolder(string folderPath)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            EditorUtility.DisplayDialog("Ошибка", "Выборанная директория не существует", "Ок");
+            return false;
+        }
+        if (!EditorUtility.DisplayDialog("Внимание", "Все файлы в выбранной папке будут удалены, Вы уверены?", "Да, удалить", "Отмена"))
+        {
+            EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+            return false;
+        }
+
+        var files = Directory.GetFiles(folderPath);
+        for (int i = 0; i < files.Length; i++)
+        {
+            var filePath = files[i];
+            UpdateProcess(i, files.Length, "Удаление файлов", filePath);
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Ошибка", $"Неполучается удалить файл {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ок");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     static void UpdateProcess(int current, int target, string title, string message)
