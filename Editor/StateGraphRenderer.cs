@@ -52,7 +52,7 @@ public class StateGraphRenderer
                     continue;
 
                 var firstConnectionPosition = connection.transform.position + connection.orientation * Vector3.forward;
-                var secondConnectionPosition = connection.destination.origin.transform.position +
+                var secondConnectionPosition = connection.destination.Origin.transform.position +
                     connection.destination.orientation * Vector3.forward;
 
                 if (showConnections)
@@ -74,7 +74,7 @@ public class StateGraphRenderer
                 if (targetState != null && showLabels)
                 {
                     Handles.color = Color.blue;
-                    Handles.Label(firstConnectionPosition, connection.destination.origin.title, _labelsStyle);
+                    Handles.Label(firstConnectionPosition, connection.destination.Origin.title, _labelsStyle);
                 }
             }
 

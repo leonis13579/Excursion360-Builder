@@ -54,11 +54,11 @@ public class TourEditor
 
         // Find view sphere prefab
         ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
-        Assert.IsNotNull(ViewSpherePrefab);
+        Assert.IsNotNull(ViewSpherePrefab, "ViewSphere prefab not found");
 
         // Find state prefab
         StatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
-        Assert.IsNotNull(StatePrefab);
+        Assert.IsNotNull(StatePrefab, "State prefab not found");
 
         // Create renderer
         StateGraphRenderer = new StateGraphRenderer();

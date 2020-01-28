@@ -125,7 +125,7 @@ public class Tour : MonoBehaviour
         foreach (var connection in connections)
         {
             Marker marker = Instantiate(markerPrefab, transform);
-            marker.name = "Marker to " + connection.destination.origin.title;
+            marker.name = "Marker to " + connection.destination.Origin.title;
             marker.connection = connection;
             marker.transform.localPosition = connection.orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();

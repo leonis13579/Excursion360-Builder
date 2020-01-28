@@ -105,10 +105,10 @@ public class TourExporter
 
                 foreach (var connection in connections)
                 {
-                    Debug.Log($"{connection.origin.title} -- {connection.destination.origin.title}");
-                    if (!stateIds.TryGetValue(connection.destination.origin.GetInstanceID(), out string otherId))
+                    Debug.Log($"{connection.Origin.title} -- {connection.destination.Origin.title}");
+                    if (!stateIds.TryGetValue(connection.destination.Origin.GetInstanceID(), out string otherId))
                     {
-                        EditorUtility.DisplayDialog("Warning", $"State {state.title} linked to {connection.destination.origin.title}, but id not found", "Ok");
+                        EditorUtility.DisplayDialog("Warning", $"State {state.title} linked to {connection.destination.Origin.title}, but id not found", "Ok");
                         continue;
                     }
 

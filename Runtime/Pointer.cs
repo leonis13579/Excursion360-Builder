@@ -57,7 +57,7 @@ public class Pointer : MonoBehaviour
         connection = marker.connection;
 
         _markerLabel.gameObject.SetActive(true);
-        _markerLabel.text = connection.destination.origin.title;
+        _markerLabel.text = connection.destination.Origin.title;
 
         var origin = Tour.Instance.transform.position;
         var direction = hit.point - origin;

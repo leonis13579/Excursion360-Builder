@@ -12,10 +12,11 @@
  
 public class Connection : MonoBehaviour
 {
-    /**
-     * @brief Origin of this connection
-     */
-    public State origin
+
+    /// <summary>
+    /// Origin of this connection
+    /// </summary>
+    public State Origin
     { 
         get
         {
@@ -25,6 +26,7 @@ public class Connection : MonoBehaviour
             return _origin;
         } 
     }
+
     [HideInInspector]
     public int colorScheme = 0;
 

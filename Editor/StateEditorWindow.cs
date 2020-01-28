@@ -86,7 +86,7 @@ public class StateEditorWindow : EditorWindow
         _selectedStates = GetSlectedStates();
         if (!_selectedStates.Find((State s) => 
         {
-            return _currentConnection != null && s == _currentConnection.origin;
+            return _currentConnection != null && s == _currentConnection.Origin;
         })) {
             _currentConnection = null;
         }
@@ -94,7 +94,7 @@ public class StateEditorWindow : EditorWindow
         if (_currentConnection == null)
             return;
 
-        var state = _currentConnection.origin;
+        var state = _currentConnection.Origin;
 
         Handles.color = Color.green;
         Handles.DrawWireCube(
@@ -222,7 +222,7 @@ public class StateEditorWindow : EditorWindow
             if (_connectionsEditMode && _currentConnection == connection)
                 buttonStyle = ToggleButtonStyleToggled;
 
-            if (GUILayout.Button(connection.destination.origin.title, buttonStyle))
+            if (GUILayout.Button(connection.destination.Origin.title, buttonStyle))
             {
                 if (_connectionsEditMode)
                 {
@@ -233,14 +233,14 @@ public class StateEditorWindow : EditorWindow
                 }
                 else
                 {
-                    FocusCamera(connection.destination.origin.gameObject);
-                    SelectObject(connection.destination.origin.gameObject);
+                    FocusCamera(connection.destination.Origin.gameObject);
+                    SelectObject(connection.destination.Origin.gameObject);
                 }
             }
 
             var schemes = Tour.Instance.colorSchemes;
             var schemeNames = schemes.Select(s => s.name).ToArray();
-            connection.colorScheme = EditorGUILayout.Popup("Color scheme", connection.colorScheme, schemeNames);
+            connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
             EditorGUILayout.Space();
         }
 
@@ -314,7 +314,7 @@ public class StateEditorWindow : EditorWindow
             if (connecton.destination == null)
                 continue;
 
-            if (connecton.destination.origin == secondState)
+            if (connecton.destination.Origin == secondState)
                 connectionFirst = connecton;
         }
 
@@ -324,7 +324,7 @@ public class StateEditorWindow : EditorWindow
             if (connecton.destination == null)
                 continue;
 
-            if (connecton.destination.origin == firstState)
+            if (connecton.destination.Origin == firstState)
                 connectionSecond = connecton;
         }
 
