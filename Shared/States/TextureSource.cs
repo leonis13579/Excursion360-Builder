@@ -7,28 +7,16 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public abstract class TextureSource : MonoBehaviour
 {
-    public enum SourceType
+    public enum Type
     {
         Image,
         Video,
         Stream
     }
 
-    public Texture loadedTexture { 
-        protected set
-        {
-            _loadedTexture = value;
-        }
-        get
-        {
-            if (_loadedTexture == null)
-                return Tour.Instance.defaultTexture;
+    public Texture LoadedTexture { protected set; get; }
 
-            return _loadedTexture;
-        }
-    }
-
-    public bool inUse { 
+    public bool InUse { 
         set
         {
             if (value == _inUse)
@@ -47,9 +35,8 @@ public abstract class TextureSource : MonoBehaviour
     }
 
     private bool _inUse = false;
-    private Texture _loadedTexture = null;
 
-    public abstract SourceType GetSourceType();
+    public abstract Type SourceType { get; }
 
     public abstract IEnumerator LoadTexture();
 

@@ -10,19 +10,19 @@ using UnityEditor.SceneManagement;
 [InitializeOnLoad]
 public class TourEditor
 {
-    /**
-     * @brief Main viewer prefab
-     */
+    /// <summary>
+    /// Main viewer prefab
+    /// </summary>
     public static GameObject ViewSpherePrefab;
 
-    /**
-     * @brief Prefab used when spawning new state from State Editor window
-     */
+    /// <summary>
+    /// Prefab used when spawning new state from State Editor window
+    /// </summary>
     public static GameObject StatePrefab;
 
-    /**
-     * @brief State graph renderer object
-     */
+    /// <summary>
+    /// State graph renderer object
+    /// </summary>
     public static StateGraphRenderer StateGraphRenderer;
 
 
@@ -33,6 +33,7 @@ public class TourEditor
 
     private const string MENU_ITEM_SHOW_CONNECTIONS = GROUP_NAME + "/Show Connections";
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
+    private const string MENU_ITEM_SHOW_ITEMS = GROUP_NAME + "/Show Items";
 
     private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop (TODO)";
     private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android (TODO)";
@@ -40,6 +41,7 @@ public class TourEditor
 
     private static bool _areConnectionsVisible;
     private static bool _areLabelsVisible;
+    private static bool _areItemsVisible;
 
     static TourEditor()
     {
@@ -67,11 +69,13 @@ public class TourEditor
         // Load settings
         _areConnectionsVisible = EditorPrefs.GetBool(MENU_ITEM_SHOW_CONNECTIONS, true);
         _areLabelsVisible = EditorPrefs.GetBool(MENU_ITEM_SHOW_LABELS, false);
+        _areItemsVisible = EditorPrefs.GetBool(MENU_ITEM_SHOW_ITEMS, false);
 
         EditorApplication.delayCall += () =>
         {
             SetConnectionsVisible(_areConnectionsVisible);
             SetLabelsVisible(_areLabelsVisible);
+            SetItemsVisible(_areItemsVisible);
             SceneView.RepaintAll();
         };
     }
@@ -111,15 +115,25 @@ public class TourEditor
         SetLabelsVisible(!_areLabelsVisible);
     }
 
+    [MenuItem(MENU_ITEM_SHOW_ITEMS, false, 21)]
+    private static void MenuItemToggleShowItems()
+    {
+        SetItemsVisible(!_areItemsVisible);
+    }
+
     [MenuItem(MENU_ITEM_BUILD_DESKTOP, false, 40)]
     private static void MenuItemBuildDesktop()
     {
+        EditorUtility.DisplayDialog("Not supported", "Desktop build not supported yet", "Ok");
+        return;
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);
     }
 
     [MenuItem(MENU_ITEM_BUILD_ANDROID, false, 41)]
     private static void MenuItemBuildAndroid()
     {
+        EditorUtility.DisplayDialog("Not supported", "Android build not supported yet", "Ok");
+        return;
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
     }
 
@@ -142,6 +156,14 @@ public class TourEditor
         SetMenuItemEnabled(MENU_ITEM_SHOW_LABELS, visible);
         StateGraphRenderer.showLabels = visible;
         _areLabelsVisible = visible;
+        SceneView.RepaintAll();
+    }
+
+    private static void SetItemsVisible(bool visible)
+    {
+        SetMenuItemEnabled(MENU_ITEM_SHOW_ITEMS, visible);
+        StateGraphRenderer.showItems = visible;
+        _areItemsVisible= visible;
         SceneView.RepaintAll();
     }
 

@@ -114,7 +114,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                     EditorGUILayout.LabelField($"Загрузка...");
                     break;
                 case BuildPackStatus.Loaded:
-                    EditorGUILayout.LabelField($"Опубликовано: {pack.PublishDate.ToString("yyyy-MM-dd")}");
+                    EditorGUILayout.LabelField($"Опубликовано: {pack.PublishDate:yyyy-MM-dd}");
                     if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "Удалить"))
                     {
                         File.Delete(pack.Location);

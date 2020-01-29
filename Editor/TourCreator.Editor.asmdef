@@ -2,7 +2,8 @@
     "name": "TourCreator.Editor",
     "references": [
         "Unity.TextMeshPro",
-        "TourCreator.Runtime"
+        "TourCreator.Runtime",
+        "TourCreator.Shared"
     ],
     "includePlatforms": [
         "Editor"

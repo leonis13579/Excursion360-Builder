@@ -18,8 +18,10 @@ public class StateEditorWindow : EditorWindow
 
     private Vector2 _connectionsListScroll = Vector2.zero;
 
-    private static GUIStyle ToggleButtonStyleNormal = null;
-    private static GUIStyle ToggleButtonStyleToggled = null;
+    private ItemsEditor itemsEditor = new ItemsEditor();
+
+    private bool connectionsFolded = false;
+    private bool itemsFolded = true;
 
     private void OnEnable()
     {
@@ -33,13 +35,6 @@ public class StateEditorWindow : EditorWindow
 
     private void OnGUI()
     {
-        // Create styles if not exists
-        if (ToggleButtonStyleNormal == null)
-        {
-            ToggleButtonStyleNormal = "Button";
-            ToggleButtonStyleToggled = new GUIStyle(ToggleButtonStyleNormal);
-            ToggleButtonStyleToggled.normal.background = ToggleButtonStyleToggled.active.background;
-        }
 
         // Draw pages
         if (_selectedStates.Count == 0 || _selectedStates.Count > 2)
@@ -84,10 +79,12 @@ public class StateEditorWindow : EditorWindow
     private void OnSceneGUI(SceneView sceneView)
     {
         _selectedStates = GetSlectedStates();
-        if (!_selectedStates.Find((State s) => 
+        itemsEditor.OnSceneGUI(sceneView, _selectedStates.FirstOrDefault());
+        if (!_selectedStates.Find((State s) =>
         {
             return _currentConnection != null && s == _currentConnection.Origin;
-        })) {
+        }))
+        {
             _currentConnection = null;
         }
 
@@ -111,7 +108,7 @@ public class StateEditorWindow : EditorWindow
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
             //if ((state.transform.position - ray.origin).magnitude <= collider.radius * collider.radius)
-                ray.origin -= ray.direction * collider.radius * 4;
+            ray.origin -= ray.direction * collider.radius * 4;
 
             if (collider.Raycast(ray, out RaycastHit hit, 100.0f))
             {
@@ -166,7 +163,7 @@ public class StateEditorWindow : EditorWindow
 
         // Draw panorama preview
 
-        var previewTexture = state.GetComponent<TextureSource>().loadedTexture;
+        var previewTexture = state.GetComponent<TextureSource>().LoadedTexture;
         if (previewTexture == null)
         {
             previewTexture = EditorGUIUtility.whiteTexture;
@@ -185,66 +182,80 @@ public class StateEditorWindow : EditorWindow
             SelectObject(state.gameObject);
         }
 
-        // Draw edit mode toggle
-        GUIStyle editModeButtonStyle = _connectionsEditMode? ToggleButtonStyleToggled : ToggleButtonStyleNormal;
-        if (GUILayout.Button("Edit mode", editModeButtonStyle, GUILayout.Height(50)))
-        { 
-            if (_connectionsEditMode)
-            {
-                TourEditor.StateGraphRenderer.targetState = null;
-                _currentConnection = null;
-            }
-            else
-            {
-                TourEditor.StateGraphRenderer.targetState = state;
-            }
 
-            _connectionsEditMode = !_connectionsEditMode;
-        }
 
         GUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
 
         // Draw connections list
-        GUILayout.Label("Connections: ", EditorStyles.boldLabel);
-
-        _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
-
-        var connections = state.GetComponents<Connection>();
-
-        foreach (var connection in connections)
+        connectionsFolded = EditorGUILayout.Foldout(connectionsFolded, "Connections: ", true);
+        if (connectionsFolded)
         {
-            if (connection.destination == null)
-                continue;
+            itemsFolded = false;
 
-            GUIStyle buttonStyle = ToggleButtonStyleNormal;
-            if (_connectionsEditMode && _currentConnection == connection)
-                buttonStyle = ToggleButtonStyleToggled;
-
-            if (GUILayout.Button(connection.destination.Origin.title, buttonStyle))
+            // Draw edit mode toggle
+            GUIStyle editModeButtonStyle = _connectionsEditMode ? Styles.ToggleButtonStyleToggled : Styles.ToggleButtonStyleNormal;
+            if (GUILayout.Button("Edit mode", editModeButtonStyle, GUILayout.Height(50)))
             {
                 if (_connectionsEditMode)
                 {
-                    if (_currentConnection == connection)
-                        _currentConnection = null;
-                    else
-                        _currentConnection = connection;
+                    TourEditor.StateGraphRenderer.targetState = null;
+                    _currentConnection = null;
                 }
                 else
                 {
-                    FocusCamera(connection.destination.Origin.gameObject);
-                    SelectObject(connection.destination.Origin.gameObject);
+                    TourEditor.StateGraphRenderer.targetState = state;
                 }
+
+                _connectionsEditMode = !_connectionsEditMode;
             }
 
-            var schemes = Tour.Instance.colorSchemes;
-            var schemeNames = schemes.Select(s => s.name).ToArray();
-            connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
-            EditorGUILayout.Space();
-        }
+            _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
 
-        EditorGUILayout.EndScrollView();
+            var connections = state.GetComponents<Connection>();
+
+            foreach (var connection in connections)
+            {
+                if (connection.destination == null)
+                    continue;
+
+                GUIStyle buttonStyle = Styles.ToggleButtonStyleNormal;
+                if (_connectionsEditMode && _currentConnection == connection)
+                    buttonStyle = Styles.ToggleButtonStyleToggled;
+
+                if (GUILayout.Button(connection.destination.Origin.title, buttonStyle))
+                {
+                    if (_connectionsEditMode)
+                    {
+                        if (_currentConnection == connection)
+                            _currentConnection = null;
+                        else
+                            _currentConnection = connection;
+                    }
+                    else
+                    {
+                        FocusCamera(connection.destination.Origin.gameObject);
+                        SelectObject(connection.destination.Origin.gameObject);
+                    }
+                }
+
+                var schemes = Tour.Instance.colorSchemes;
+                var schemeNames = schemes.Select(s => s.name).ToArray();
+                connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
+                EditorGUILayout.Space();
+            }
+            EditorGUILayout.EndScrollView();
+        }
+        itemsFolded = EditorGUILayout.Foldout(itemsFolded, "Items: ", true);
+        if (itemsFolded)
+        {
+            connectionsFolded = false;
+            _connectionsEditMode = false;
+            TourEditor.StateGraphRenderer.targetState = null;
+            _currentConnection = null;
+            itemsEditor.Draw(state);
+        }
 
         EditorGUILayout.Space();
 

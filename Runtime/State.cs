@@ -33,10 +33,6 @@ public class State : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        TextureSource textureSource = GetComponent<TextureSource>();
-        if (textureSource == null)
-            gameObject.AddComponent<FileImageSource>();
-
         ReloadTexture();
 #endif
     }
@@ -78,7 +74,7 @@ public class State : MonoBehaviour
 
     private IEnumerator LoadTexture(TextureSource textureSource)
     {
-        yield return textureSource.LoadTexture();
+        yield return StartCoroutine(textureSource.LoadTexture());
 
         if (_renderer == null)
             _renderer = GetComponent<Renderer>();
@@ -87,7 +83,7 @@ public class State : MonoBehaviour
             _materialProperties = new MaterialPropertyBlock();
 
         _renderer.GetPropertyBlock(_materialProperties);
-        _materialProperties.SetTexture("_MainTex", textureSource.loadedTexture);
+        _materialProperties.SetTexture("_MainTex", textureSource.LoadedTexture);
         _renderer.SetPropertyBlock(_materialProperties);
     }
 #endif
