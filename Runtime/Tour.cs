@@ -23,7 +23,9 @@ public class Tour : MonoBehaviour
     private static Tour _instance;
 
     public State firstState;
-    public Marker markerPrefab;
+
+    public ConnectionMarker connectionMarkerPrefab;
+    public GroupConnectionMarker groupConnectionMarkerPrefab;
 
     public Texture defaultTexture;
     public Texture logoTexture;
@@ -124,14 +126,28 @@ public class Tour : MonoBehaviour
         
         foreach (var connection in connections)
         {
-            Marker marker = Instantiate(markerPrefab, transform);
-            marker.name = "Marker to " + connection.destination.Origin.title;
+            ConnectionMarker marker = Instantiate(connectionMarkerPrefab, transform);
+            marker.name = "Marker to " + connection.Destination.title;
             marker.connection = connection;
             marker.transform.localPosition = connection.orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();
             markerRenderer.material.SetColor("_Color", colorSchemes[connection.colorScheme].color);
             _markers.Add(marker);
         }
+
+        var groupConnections = _currentState.GetComponents<GroupConnection>();
+
+        foreach (var groupConnection in groupConnections)
+        {
+            GroupConnectionMarker marker = Instantiate(groupConnectionMarkerPrefab, transform);
+            marker.name = "Group Marker to " + groupConnection.title;
+            marker.groupConnection = groupConnection;
+            marker.transform.localPosition = groupConnection.orientation * Vector3.forward;
+            var markerRenderer = marker.GetComponent<Renderer>();
+            markerRenderer.material.SetColor("_Color", Color.blue);
+            _markers.Add(marker);
+        }
+
     }
 
     public void ClearConnections()
@@ -185,8 +201,8 @@ public class Tour : MonoBehaviour
         var connections = state.GetComponents<Connection>();
         foreach (var connection in connections)
         {
-            if (connection.destination)
-                StartCoroutine(connection.destination.GetComponent<TextureSource>().LoadTexture());
+            if (connection.Destination)
+                StartCoroutine(connection.Destination.GetComponent<TextureSource>().LoadTexture());
         }
         return textureSource;
     }

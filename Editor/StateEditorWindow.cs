@@ -17,9 +17,11 @@ public class StateEditorWindow : EditorWindow
 
     private Vector2 _connectionsListScroll = Vector2.zero;
 
+    private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
     private readonly ContentEditor contentEditor = new ContentEditor();
 
     private bool connectionsOpened = true;
+    private bool groupConnectionsOpened = true;
     private bool itemsOpened = true;
 
     private void OnEnable()
@@ -171,14 +173,14 @@ public class StateEditorWindow : EditorWindow
 
             foreach (var connection in connections)
             {
-                if (connection.destination == null)
+                if (connection.Destination == null)
                     continue;
-                GUILayout.Label(connection.destination.Origin.title, EditorStyles.boldLabel);
+                GUILayout.Label(connection.Destination.title, EditorStyles.boldLabel);
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("move to"))
                 {
-                    FocusCamera(connection.destination.Origin.gameObject);
-                    SelectObject(connection.destination.Origin.gameObject);
+                    FocusCamera(connection.Destination.gameObject);
+                    SelectObject(connection.Destination.gameObject);
                 }
 
                 var buttonStyle = Styles.ToggleButtonStyleNormal;
@@ -205,6 +207,13 @@ public class StateEditorWindow : EditorWindow
             }
             EditorGUILayout.EndScrollView();
         }
+
+        groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections", true);
+        if (groupConnectionsOpened)
+        {
+            groupConnectionEditor.Draw(state);
+        }
+
         // TODO Content draw
         //itemsOpened = EditorGUILayout.Foldout(itemsOpened, "Items: ", true);
         //if (itemsOpened)
@@ -223,6 +232,11 @@ public class StateEditorWindow : EditorWindow
     void DrawConnectionEditGUI()
     {
         GUILayout.FlexibleSpace();
+
+        foreach (var item in _selectedStates)
+        {
+            GUILayout.Label(item.title);
+        }
 
         if (GUILayout.Button("Toggle connection", GUILayout.Height(50)))
         {
@@ -280,20 +294,20 @@ public class StateEditorWindow : EditorWindow
         Connection connectionFirst = null;
         foreach (var connecton in firstStateConnections)
         {
-            if (connecton.destination == null)
+            if (connecton.Destination == null)
                 continue;
 
-            if (connecton.destination.Origin == secondState)
+            if (connecton.Destination == secondState)
                 connectionFirst = connecton;
         }
 
         Connection connectionSecond = null;
         foreach (var connecton in seconsStateConnections)
         {
-            if (connecton.destination == null)
+            if (connecton.Destination == null)
                 continue;
 
-            if (connecton.destination.Origin == firstState)
+            if (connecton.Destination == firstState)
                 connectionSecond = connecton;
         }
 
@@ -304,10 +318,10 @@ public class StateEditorWindow : EditorWindow
             connectionFirst = Undo.AddComponent<Connection>(firstState.gameObject);
             connectionSecond = Undo.AddComponent<Connection>(secondState.gameObject);
 
-            connectionFirst.destination = connectionSecond;
+            connectionFirst.Destination = secondState;
             connectionFirst.orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
 
-            connectionSecond.destination = connectionFirst;
+            connectionSecond.Destination = firstState;
             connectionSecond.orientation = Quaternion.FromToRotation(Vector3.forward, -directionToSecond);
         }
         else

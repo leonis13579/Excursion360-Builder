@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/**
- * @brief Mouse controlled pointer
- */
+/// <summary>
+/// Mouse controlled pointer
+/// </summary>
 public class DesktopPointer : Pointer
 {
     public float sensitivityX = 1f;
@@ -20,9 +20,9 @@ public class DesktopPointer : Pointer
 
     void Update()
     {
-        if (HoverCheck(Camera.main.ScreenPointToRay(Input.mousePosition), out Connection connection) && Input.GetMouseButtonUp(0))
+        if (HoverCheck(Camera.main.ScreenPointToRay(Input.mousePosition), out Marker marker) && Input.GetMouseButtonUp(0))
         {
-            Tour.Instance.StartTransition(connection.destination.Origin);
+            marker.HandleInteract();
         }
         else if (Input.GetMouseButton(0))
         {

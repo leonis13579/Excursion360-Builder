@@ -33,7 +33,7 @@ public class Connection : StateItem
     /**
      * @brief Linked connection
      */
-    public Connection destination;
+    public State Destination;
 
     private State _origin; /// Cache
 }

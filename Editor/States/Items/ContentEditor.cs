@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 #if UNITY_EDITOR
 
-public class ContentEditor
+class ContentEditor : EditorBase
 {
     public void Draw(State state)
     {
@@ -21,11 +21,7 @@ public class ContentEditor
         EditorGUILayout.Space();
         foreach (var item in state.GetComponents<ContentItem>())
         {
-            var titleName = string.IsNullOrEmpty(item.name) ? "NO TITLE" : item.name;
-            if (titleName.Length > 30)
-            {
-                titleName = titleName.Substring(0, 30) + "...";
-            }
+            var titleName = GetTitleStringOf(item.name);
             if (item.isOpened = EditorGUILayout.Foldout(item.isOpened, titleName, true))
             {
                 Undo.RecordObject(item, "Edit state item name");
@@ -54,10 +50,6 @@ public class ContentEditor
             }
             EditorGUILayout.Space();
         }
-    }
-
-    internal void OnSceneGUI(SceneView sceneView, State state)
-    {
     }
 }
 

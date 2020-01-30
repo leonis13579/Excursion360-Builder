@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -57,7 +58,51 @@ public class StateGraphRenderer
                 continue;
 
             RenderConnections(state);
+            RenderGroupConnections(state);
             RenderItems(state);
+        }
+    }
+
+    private void RenderGroupConnections(State state)
+    {
+        var groupConnections = state.GetComponents<GroupConnection>();
+        foreach (var item in groupConnections)
+        {
+            var itemPosition = item.transform.position + item.orientation * Vector3.forward;
+            Handles.color = Color.blue;
+            Handles.DotHandleCap(
+                0,
+                itemPosition,
+                item.transform.rotation,
+                0.05f,
+                EventType.Repaint
+            );
+            foreach (var targetState in item.states)
+            {
+                var firstConnectionPosition = state.transform.position + item.orientation * Vector3.forward;
+                var secondConnectionPosition = targetState.transform.position;
+
+                var backConnection = targetState.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
+
+                if (backConnection == null)
+                {
+                    var backGroupConnection = targetState.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
+                    if (backGroupConnection != null)
+                    {
+                        secondConnectionPosition += backGroupConnection.orientation * Vector3.forward;
+                    }
+                }
+                else
+                {
+                    secondConnectionPosition += backConnection.orientation * Vector3.forward;
+                }
+
+                if (showConnections)
+                {
+                    Handles.color = Color.yellow;
+                    Handles.DrawLine(firstConnectionPosition, secondConnectionPosition);
+                }
+            }
         }
     }
 
@@ -68,7 +113,7 @@ public class StateGraphRenderer
         {
             var itemPosition = item.transform.position + item.orientation * Vector3.forward;
             Handles.color = Color.cyan;
-            Handles.SphereHandleCap(
+            Handles.DotHandleCap(
                 0,
                 itemPosition,
                 item.transform.rotation,
@@ -85,12 +130,23 @@ public class StateGraphRenderer
 
         foreach (var connection in connections)
         {
-            if (connection.destination == null)
-                continue;
 
             var firstConnectionPosition = connection.transform.position + connection.orientation * Vector3.forward;
-            var secondConnectionPosition = connection.destination.Origin.transform.position +
-                connection.destination.orientation * Vector3.forward;
+            var secondConnectionPosition = connection.Destination.transform.position;
+            var backConnection = connection.Destination.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
+
+            if (backConnection == null)
+            {
+                var backGroupConnection = connection.Destination.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
+                if (backGroupConnection != null)
+                {
+                    secondConnectionPosition += backGroupConnection.orientation * Vector3.forward;
+                }
+            }
+            else
+            {
+                secondConnectionPosition += backConnection.orientation * Vector3.forward;
+            }
 
             if (showConnections)
             {
@@ -110,7 +166,7 @@ public class StateGraphRenderer
             // Draw label on connections when target is selected
             if (targetState != null && showLabels)
             {
-                Handles.Label(firstConnectionPosition, connection.destination.Origin.title, _labelsEditModeStyle);
+                Handles.Label(firstConnectionPosition, connection.Origin.title, _labelsEditModeStyle);
             }
         }
 

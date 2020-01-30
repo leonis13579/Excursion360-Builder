@@ -2,19 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/**
- * @brief Physical representation of connection origin
- */
-public class Marker : MonoBehaviour
-{
-    /**
-     * @brief Connection to which this marker is assigned
-     */
-    public Connection connection;
 
-    /**
-     * @brief Affects animation varialbe "Hovered"
-     */
+/// <summary>
+/// Physical representation of some <see cref="StateItem"/>
+/// </summary>
+public abstract class Marker : MonoBehaviour
+{
+    public abstract string Title { get; }
+    public abstract void HandleInteract();
+
+    /// <summary>
+    /// Affects animation varialbe "Hovered"
+    /// </summary>
     public bool hovered
     {
         get

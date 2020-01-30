@@ -7,15 +7,15 @@ using UnityEngine.Assertions;
 using UnityEditor;
 #endif
 
-/**
- * @brief Represents some place
- */
+/// <summary>
+/// Represents some place
+/// </summary>
 [ExecuteInEditMode]
 public class State : MonoBehaviour
 {
-    /**
-     * @brief Name of this place
-     */
+    /// <summary>
+    /// Name of this place
+    /// </summary>
     public string title;
 
     private Renderer _renderer;
@@ -38,13 +38,6 @@ public class State : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    private void OnDestroy()
-    {
-        var connections = GetComponents<Connection>();
-        foreach (var connection in connections)
-            if (connection.destination)
-                Undo.DestroyObjectImmediate(connection.destination);
-    }
 
     void Update()
     {
@@ -53,13 +46,6 @@ public class State : MonoBehaviour
 
     public void Reload()
     {
-        var connections = GetComponents<Connection>();
-        foreach (var connection in connections)
-        {
-            if (connection.destination)
-                connection.destination.destination = connection;
-        }
-
         ReloadTexture();
     }
 
