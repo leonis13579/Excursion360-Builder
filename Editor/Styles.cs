@@ -12,8 +12,15 @@ class Styles
         ToggleButtonStyleNormal = "Button";
         ToggleButtonStyleToggled = new GUIStyle(ToggleButtonStyleNormal);
         ToggleButtonStyleToggled.normal.background = ToggleButtonStyleToggled.active.background;
+
+        DeleteButtonStyle = new GUIStyle(ToggleButtonStyleNormal);
+        DeleteButtonStyle.normal.textColor = Color.red;
+        DeleteButtonStyle.active.textColor = Color.red;
+
     }
     public static readonly GUIStyle ToggleButtonStyleNormal;
     public static readonly GUIStyle ToggleButtonStyleToggled;
+
+    public static readonly GUIStyle DeleteButtonStyle;
 }
 

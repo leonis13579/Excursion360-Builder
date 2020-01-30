@@ -2,21 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StateItem : MonoBehaviour
+public abstract class StateItem : MonoBehaviour
 {
-    public StateItemType Type { get; }
-    public new string name = "no name";
+    /// <summary>
+    /// Orientation of item in state
+    /// </summary>
     public Quaternion orientation = Quaternion.identity;
 
 #if UNITY_EDITOR
-    public bool isFolded;
+    public bool isOpened;
 #endif
-    void Start()
-    {
-    }
-
-    void Update()
-    {
-        base.name = this.name;
-    }
 }

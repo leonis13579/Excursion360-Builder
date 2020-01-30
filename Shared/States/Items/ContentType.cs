@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum StateItemType
+public enum ContentType
 {
     Image
 }

@@ -10,7 +10,7 @@
  */
 
  
-public class Connection : MonoBehaviour
+public class Connection : StateItem
 {
 
     /// <summary>
@@ -29,11 +29,6 @@ public class Connection : MonoBehaviour
 
     [HideInInspector]
     public int colorScheme = 0;
-
-    /**
-     * @brief Orientation of marker in origin
-     */
-    public Quaternion orientation = Quaternion.identity;
 
     /**
      * @brief Linked connection

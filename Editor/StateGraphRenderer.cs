@@ -63,7 +63,7 @@ public class StateGraphRenderer
 
     private void RenderItems(State state)
     {
-        var items = state.GetComponents<StateItem>();
+        var items = state.GetComponents<ContentItem>();
         foreach (var item in items)
         {
             var itemPosition = item.transform.position + item.orientation * Vector3.forward;

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +9,6 @@ using UnityEditor.SceneManagement;
 
 public class StateEditorWindow : EditorWindow
 {
-    private Connection _currentConnection;
     private List<State> _selectedStates = new List<State>();
 
     private bool _connectionsEditMode = false;
@@ -18,10 +17,10 @@ public class StateEditorWindow : EditorWindow
 
     private Vector2 _connectionsListScroll = Vector2.zero;
 
-    private ItemsEditor itemsEditor = new ItemsEditor();
+    private readonly ContentEditor contentEditor = new ContentEditor();
 
-    private bool connectionsFolded = false;
-    private bool itemsFolded = true;
+    private bool connectionsOpened = true;
+    private bool itemsOpened = true;
 
     private void OnEnable()
     {
@@ -79,50 +78,6 @@ public class StateEditorWindow : EditorWindow
     private void OnSceneGUI(SceneView sceneView)
     {
         _selectedStates = GetSlectedStates();
-        itemsEditor.OnSceneGUI(sceneView, _selectedStates.FirstOrDefault());
-        if (!_selectedStates.Find((State s) =>
-        {
-            return _currentConnection != null && s == _currentConnection.Origin;
-        }))
-        {
-            _currentConnection = null;
-        }
-
-        if (_currentConnection == null)
-            return;
-
-        var state = _currentConnection.Origin;
-
-        Handles.color = Color.green;
-        Handles.DrawWireCube(
-            state.transform.position + _currentConnection.orientation * Vector3.forward,
-            Vector3.one * 0.2f
-        );
-
-        if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
-        {
-            GUIUtility.hotControl = GUIUtility.GetControlID(FocusType.Passive);
-            Event.current.Use();
-
-            SphereCollider collider = state.GetComponent<SphereCollider>();
-            Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-
-            //if ((state.transform.position - ray.origin).magnitude <= collider.radius * collider.radius)
-            ray.origin -= ray.direction * collider.radius * 4;
-
-            if (collider.Raycast(ray, out RaycastHit hit, 100.0f))
-            {
-                var toCenterDirection = state.transform.position - hit.point;
-                var rightDirection = Vector3.Cross(toCenterDirection, ray.direction);
-                var normal = Vector3.Cross(rightDirection, ray.direction);
-                var hitPosition = state.transform.position + ReflectDirection(toCenterDirection, normal);
-
-                Undo.RecordObject(_currentConnection, "Undo orientation change");
-
-                _currentConnection.orientation = Quaternion.FromToRotation(Vector3.forward,
-                    hitPosition - state.transform.position);
-            }
-        }
     }
 
     private void DrawIdlePageGUI()
@@ -186,30 +141,29 @@ public class StateEditorWindow : EditorWindow
 
         GUILayout.EndHorizontal();
 
+        // Draw edit mode toggle
+        GUIStyle editModeButtonStyle = _connectionsEditMode ? Styles.ToggleButtonStyleToggled : Styles.ToggleButtonStyleNormal;
+        if (GUILayout.Button("Edit mode", editModeButtonStyle, GUILayout.Height(50)))
+        {
+            if (_connectionsEditMode)
+            {
+                TourEditor.StateGraphRenderer.targetState = null;
+            }
+            else
+            {
+                TourEditor.StateGraphRenderer.targetState = state;
+            }
+
+            _connectionsEditMode = !_connectionsEditMode;
+        }
+
         EditorGUILayout.Space();
 
         // Draw connections list
-        connectionsFolded = EditorGUILayout.Foldout(connectionsFolded, "Connections: ", true);
-        if (connectionsFolded)
+        connectionsOpened = EditorGUILayout.Foldout(connectionsOpened, "Connections: ", true);
+        if (connectionsOpened)
         {
-            itemsFolded = false;
-
-            // Draw edit mode toggle
-            GUIStyle editModeButtonStyle = _connectionsEditMode ? Styles.ToggleButtonStyleToggled : Styles.ToggleButtonStyleNormal;
-            if (GUILayout.Button("Edit mode", editModeButtonStyle, GUILayout.Height(50)))
-            {
-                if (_connectionsEditMode)
-                {
-                    TourEditor.StateGraphRenderer.targetState = null;
-                    _currentConnection = null;
-                }
-                else
-                {
-                    TourEditor.StateGraphRenderer.targetState = state;
-                }
-
-                _connectionsEditMode = !_connectionsEditMode;
-            }
+            itemsOpened = false;
 
             _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
 
@@ -219,26 +173,30 @@ public class StateEditorWindow : EditorWindow
             {
                 if (connection.destination == null)
                     continue;
+                GUILayout.Label(connection.destination.Origin.title, EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("move to"))
+                {
+                    FocusCamera(connection.destination.Origin.gameObject);
+                    SelectObject(connection.destination.Origin.gameObject);
+                }
 
-                GUIStyle buttonStyle = Styles.ToggleButtonStyleNormal;
-                if (_connectionsEditMode && _currentConnection == connection)
+                var buttonStyle = Styles.ToggleButtonStyleNormal;
+                if (StateItemPlaceEditor.EditableItem == connection)
                     buttonStyle = Styles.ToggleButtonStyleToggled;
 
-                if (GUILayout.Button(connection.destination.Origin.title, buttonStyle))
+                if (GUILayout.Button("edit", buttonStyle))
                 {
-                    if (_connectionsEditMode)
+                    if (StateItemPlaceEditor.EditableItem == connection)
                     {
-                        if (_currentConnection == connection)
-                            _currentConnection = null;
-                        else
-                            _currentConnection = connection;
+                        StateItemPlaceEditor.CleadEditing();
                     }
                     else
                     {
-                        FocusCamera(connection.destination.Origin.gameObject);
-                        SelectObject(connection.destination.Origin.gameObject);
+                        StateItemPlaceEditor.EnableEditing(state, connection, Color.green);
                     }
                 }
+                EditorGUILayout.EndHorizontal();
 
                 var schemes = Tour.Instance.colorSchemes;
                 var schemeNames = schemes.Select(s => s.name).ToArray();
@@ -247,15 +205,15 @@ public class StateEditorWindow : EditorWindow
             }
             EditorGUILayout.EndScrollView();
         }
-        itemsFolded = EditorGUILayout.Foldout(itemsFolded, "Items: ", true);
-        if (itemsFolded)
-        {
-            connectionsFolded = false;
-            _connectionsEditMode = false;
-            TourEditor.StateGraphRenderer.targetState = null;
-            _currentConnection = null;
-            itemsEditor.Draw(state);
-        }
+        // TODO Content draw
+        //itemsOpened = EditorGUILayout.Foldout(itemsOpened, "Items: ", true);
+        //if (itemsOpened)
+        //{
+        //    connectionsOpened = false;
+        //    _connectionsEditMode = false;
+        //    TourEditor.StateGraphRenderer.targetState = null;
+        //    itemsEditor.Draw(state);
+        //}
 
         EditorGUILayout.Space();
 
