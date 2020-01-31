@@ -154,9 +154,9 @@ public class TourExporter
         string path = AssetDatabase.GetAssetPath(Tour.Instance.logoTexture);
         if (string.IsNullOrEmpty(path))
         {
-            if (!EditorUtility.DisplayDialog("Внимание", "Вы не указали логотип для перехода между локациями. Уверены, что хотите оставить логотип по умолчанию?", "Да, продолжить", "Отмена"))
+            if (!EditorUtility.DisplayDialog("Warning", "There is no logo to navigate between locations. Are you sure you want to leave the default logo?", "Yes, continue", "Cancel"))
             {
-                EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+                EditorUtility.DisplayDialog("Cancel", "Operation cancelled", "Ok");
                 return false;
             }
             logoPath = "";
@@ -171,30 +171,25 @@ public class TourExporter
 
     private static void UnpackViewer(string viewerLocation, string folderPath)
     {
-        using (var fileStream = File.OpenRead(viewerLocation))
-        using (var zipInputStream = new ZipInputStream(fileStream))
+        using var fileStream = File.OpenRead(viewerLocation);
+        using var zipInputStream = new ZipInputStream(fileStream);
+        while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
         {
+            var entryFileName = zipEntry.Name;
+            var buffer = new byte[4096];
 
-            while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
+            var fullZipToPath = Path.Combine(folderPath, entryFileName);
+            var directoryName = Path.GetDirectoryName(fullZipToPath);
+            if (directoryName.Length > 0)
+                Directory.CreateDirectory(directoryName);
+
+            if (Path.GetFileName(fullZipToPath).Length == 0)
             {
-                var entryFileName = zipEntry.Name;
-                var buffer = new byte[4096];
-
-                var fullZipToPath = Path.Combine(folderPath, entryFileName);
-                var directoryName = Path.GetDirectoryName(fullZipToPath);
-                if (directoryName.Length > 0)
-                    Directory.CreateDirectory(directoryName);
-
-                if (Path.GetFileName(fullZipToPath).Length == 0)
-                {
-                    continue;
-                }
-
-                using (FileStream streamWriter = File.Create(fullZipToPath))
-                {
-                    StreamUtils.Copy(zipInputStream, streamWriter, buffer);
-                }
+                continue;
             }
+
+            using FileStream streamWriter = File.Create(fullZipToPath);
+            StreamUtils.Copy(zipInputStream, streamWriter, buffer);
         }
     }
 
@@ -203,12 +198,12 @@ public class TourExporter
     {
         if (!Directory.Exists(folderPath))
         {
-            EditorUtility.DisplayDialog("Ошибка", "Выборанная директория не существует", "Ок");
+            EditorUtility.DisplayDialog("Error", "Selected directory does not exist", "Ок");
             return false;
         }
-        if (!EditorUtility.DisplayDialog("Внимание", "Все файлы в выбранной папке будут удалены, Вы уверены?", "Да, удалить", "Отмена"))
+        if (!EditorUtility.DisplayDialog("Warning", "All files in the selected folder will be deleted, are you sure?", "Yes, delete", "Cancel"))
         {
-            EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+            EditorUtility.DisplayDialog("Cancel", "Operation cancelled", "Ok");
             return false;
         }
 
@@ -216,14 +211,14 @@ public class TourExporter
         for (int i = 0; i < files.Length; i++)
         {
             var filePath = files[i];
-            UpdateProcess(i, files.Length, "Удаление файлов", filePath);
+            UpdateProcess(i, files.Length, "Deleting old files", filePath);
             try
             {
                 File.Delete(filePath);
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Ошибка", $"Неполучается удалить файл {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ок");
+                EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
                 return false;
             }
         }
