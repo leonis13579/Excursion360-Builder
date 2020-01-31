@@ -35,7 +35,7 @@ public abstract class Marker : MonoBehaviour
     private Animator _animator;
     private bool _hovered;
 
-    void Start()
+    protected virtual void Start()
     {
         _animator = GetComponent<Animator>();
     }

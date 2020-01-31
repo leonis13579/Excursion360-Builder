@@ -158,7 +158,7 @@ public class StateGraphRenderer
                     0,
                     firstConnectionPosition,
                     Quaternion.identity,
-                    0.05f,
+                    0.07f,
                     EventType.Repaint
                 );
             }

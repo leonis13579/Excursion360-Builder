@@ -9,6 +9,8 @@ using UnityEngine;
 
 class GroupConnectionEditor : EditorBase
 {
+    private Vector2 groupsScroll = Vector2.zero;
+
     public void Draw(State state)
     {
         EditorGUILayout.BeginHorizontal();
@@ -18,11 +20,15 @@ class GroupConnectionEditor : EditorBase
         }
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
-
+        groupsScroll = EditorGUILayout.BeginScrollView(groupsScroll);
         var groupConnections = state.GetComponents<GroupConnection>();
         foreach (var groupConnection in groupConnections)
         {
-            GUILayout.Label(GetTitleStringOf(groupConnection.title), EditorStyles.boldLabel);
+            var groupConnectionTitle = GetTitleStringOf(groupConnection.title);
+            GUILayout.Label(groupConnectionTitle, EditorStyles.boldLabel);
+
+            EditorGUI.indentLevel++;
+
             Undo.RecordObject(groupConnection, "Edit group connection title");
             groupConnection.title = EditorGUILayout.TextField("Title:", groupConnection.title);
 
@@ -30,7 +36,7 @@ class GroupConnectionEditor : EditorBase
             if (StateItemPlaceEditor.EditableItem == groupConnection)
                 buttonStyle = Styles.ToggleButtonStyleToggled;
 
-            if (GUILayout.Button("edit", buttonStyle))
+            if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "edit", buttonStyle))
             {
                 if (StateItemPlaceEditor.EditableItem == groupConnection)
                 {
@@ -46,10 +52,10 @@ class GroupConnectionEditor : EditorBase
 
 
             var connections = state.GetComponents<Connection>();
-            
+
             if (connections.Length > 0)
             {
-                if (GUILayout.Button($"Add connection"))
+                if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), $"Add connection"))
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -73,11 +79,41 @@ class GroupConnectionEditor : EditorBase
                 GUILayout.Label("No available connections to add");
             }
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("State references:");
+            EditorGUI.indentLevel++;
             foreach (var stateReference in groupConnection.states)
             {
-                GUILayout.Label(stateReference.title);
+                EditorGUILayout.LabelField(stateReference.title);
+                var line = EditorGUILayout.BeginHorizontal();
+
+                GUILayout.Space(40);
+
+                if (GUILayout.Button("Move to"))
+                {
+                    StateEditorWindow.FocusCamera(stateReference.gameObject);
+                }
+
+                if (GUILayout.Button("To simple connection"))
+                {
+                    Undo.RecordObject(groupConnection, "Delete state reference");
+                    groupConnection.states.Remove(stateReference);
+                    var addedConnection = Undo.AddComponent<Connection>(state.gameObject);
+                    addedConnection.Destination = stateReference;
+                    break;
+                }
+
+                if (GUILayout.Button("Delete", Styles.DeleteButtonStyle))
+                {
+                    Undo.RecordObject(groupConnection, "Delete state reference");
+                    groupConnection.states.Remove(stateReference);
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
             }
+            EditorGUI.indentLevel--;
+            EditorGUI.indentLevel--;
         }
+        EditorGUILayout.EndScrollView();
     }
 }
 #endif

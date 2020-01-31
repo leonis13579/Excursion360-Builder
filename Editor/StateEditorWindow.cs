@@ -258,7 +258,7 @@ public class StateEditorWindow : EditorWindow
         Repaint();
     }
 
-    private void FocusCamera(GameObject obj)
+    public static void FocusCamera(GameObject obj)
     {
         var sceneView = SceneView.lastActiveSceneView;
 
