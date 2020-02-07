@@ -8,10 +8,9 @@ using UnityEngine;
 namespace Packages.tour_creator.Editor.Protocol
 {
     [Serializable]
-    class StateLink
+    class StateLink : StateItem
     {
         public string id = "state";
-        public Quaternion rotation;
         public int colorScheme;
     }
 }

@@ -8,10 +8,8 @@ using UnityEngine;
 namespace Packages.tour_creator.Editor.Protocol
 {
     [Serializable]
-    class Tour
+    class StateItem
     {
-        public string firstStateId;
-        public List<State> states;
-        public Color[] colorSchemes;
+        public Quaternion rotation;
     }
 }

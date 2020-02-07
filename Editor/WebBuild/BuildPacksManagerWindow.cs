@@ -79,7 +79,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("Target path");
             outFolderPath = EditorGUILayout.TextField(outFolderPath);
-            if (GUILayout.Button("Select"))
+            if (GUILayout.Button("..."))
             {
                 outFolderPath = EditorUtility.OpenFolderPanel("Select folder to export", outFolderPath, "");
                 Repaint();

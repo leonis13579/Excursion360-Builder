@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace Packages.tour_creator.Editor.Protocol
 {
     [Serializable]
-    class Tour
+    class GroupStateLink : StateItem
     {
-        public string firstStateId;
-        public List<State> states;
-        public Color[] colorSchemes;
+        public string title;
+        public List<string> stateIds;
     }
 }

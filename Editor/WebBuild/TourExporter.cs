@@ -27,7 +27,6 @@ public class TourExporter
             CreateConfigFile(folderPath, logoFileName);
 
 
-            Exported.Tour tour = new Exported.Tour();
 
             // Find first state
             if (Tour.Instance == null)
@@ -35,8 +34,6 @@ public class TourExporter
                 EditorUtility.DisplayDialog("Error", "There is no tour object on this scene!", "Ok");
                 return;
             }
-
-            tour.colorSchemes = Tour.Instance.colorSchemes.Select(cs => cs.color).ToArray();
 
             State firstState = Tour.Instance.firstState;
             if (firstState == null)
@@ -52,75 +49,32 @@ public class TourExporter
                 EditorUtility.DisplayDialog("Error", "There is no states on this scene to export!", "Ok");
                 return;
             }
+
+            Exported.Tour tour = new Exported.Tour
+            {
+                firstStateId = firstState.GetExportedId(),
+                colorSchemes = Tour.Instance.colorSchemes.Select(cs => cs.color).ToArray(),
+                states = new List<Exported.State>(),
+            };
+
+
             Debug.Log($"Finded {states.Length} states");
             // Pre process states
             UpdateProcess(0, states.Length, "Exporting", "");
 
-            Dictionary<int, string> stateIds = new Dictionary<int, string>();
-
             for (int i = 0; i < states.Length; ++i)
             {
                 var state = states[i];
 
-                TextureSource textureSource = state.GetComponent<TextureSource>();
-                if (textureSource == null)
+                if (!TryHandleState(state, folderPath, out var exportedState))
                 {
-                    EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+                    EditorUtility.DisplayDialog("Error", $"Error while exporting state {state.title}", "Ok");
                     return;
                 }
 
-                Exported.State exportedState = new Exported.State
-                {
-                    id = "state_" + i,
-                    title = state.title,
-                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, "state_" + i)}",
-                    type = textureSource.SourceType.ToString().ToLower(),
-                    rotation = state.transform.rotation.eulerAngles,
-                    pictureRotation = state.transform.rotation
-                };
-
-                stateIds.Add(state.GetInstanceID(), exportedState.id);
                 tour.states.Add(exportedState);
 
                 UpdateProcess(i + 1, states.Length, "Exporting", $"{i + 1}/{states.Length}: {state.title}");
-            }
-
-            // Assign first state id
-            stateIds.TryGetValue(firstState.GetInstanceID(), out tour.firstStateId);
-
-            // Process links
-            for (int i = 0; i < states.Length; ++i)
-            {
-                var state = states[i];
-                var exportedState = tour.states[i];
-
-                Debug.Log(state.title);
-
-                Connection[] connections = state.gameObject.GetComponents<Connection>();
-                if (connections == null || connections.Length == 0)
-                {
-                    EditorUtility.DisplayDialog("Warning", $"State {state.title} does not have connections!", "Ok");
-                    continue;
-                }
-
-                foreach (var connection in connections)
-                {
-                    Debug.Log($"{connection.Origin.title} -- {connection.Destination.title}");
-                    if (!stateIds.TryGetValue(connection.Destination.GetInstanceID(), out string otherId))
-                    {
-                        EditorUtility.DisplayDialog("Warning", $"State {state.title} linked to {connection.Destination.title}, but id not found", "Ok");
-                        continue;
-                    }
-
-                    Vector3 direction = (connection.orientation * Vector3.forward).normalized;
-
-                    exportedState.links.Add(new Exported.StateLink()
-                    {
-                        id = otherId,
-                        rotation = connection.orientation,
-                        colorScheme = connection.colorScheme
-                    });
-                }
             }
 
             // Serialize and write
@@ -135,6 +89,78 @@ public class TourExporter
             EditorUtility.ClearProgressBar();
         }
         // Finish
+    }
+
+
+    private static bool TryHandleState(
+        State state, 
+        string folderPath,
+        out Exported.State exportedState)
+    {
+        exportedState = default;
+        TextureSource textureSource = state.GetComponent<TextureSource>();
+        if (textureSource == null)
+        {
+            EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+            return false;
+        }
+        var stateId = state.GetExportedId();
+        exportedState = new Exported.State
+        {
+            id = stateId,
+            title = state.title,
+            url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, stateId)}",
+            type = textureSource.SourceType.ToString().ToLower(),
+            rotation = state.transform.rotation.eulerAngles,
+            pictureRotation = state.transform.rotation,
+            links = GetLinks(state),
+            groupLinks = GetGroupLinks(state)
+        };
+        return true;
+    }
+
+    private static List<Exported.StateLink> GetLinks(State state)
+    {
+        var stateLinks = new List<Exported.StateLink>();
+        var connections = state.GetComponents<Connection>();
+        if (connections == null || connections.Length == 0)
+        {
+            Debug.LogWarning($"State {state.title} does not have connections!");
+            return stateLinks;
+        }
+
+        foreach (var connection in connections)
+        {
+            stateLinks.Add(new Exported.StateLink()
+            {
+                id = connection.Destination.GetExportedId(),
+                rotation = connection.orientation,
+                colorScheme = connection.colorScheme
+            });
+        }
+        return stateLinks;
+    }
+
+    private static List<Exported.GroupStateLink> GetGroupLinks(State state)
+    {
+        var stateLinks = new List<Exported.GroupStateLink>();
+        var connections = state.GetComponents<GroupConnection>();
+        if (connections == null || connections.Length == 0)
+        {
+            Debug.LogWarning($"State {state.title} does not have group connections!");
+            return stateLinks;
+        }
+
+        foreach (var connection in connections)
+        {
+            stateLinks.Add(new Exported.GroupStateLink()
+            {
+                title = connection.title,
+                rotation = connection.orientation,
+                stateIds = connection.states.Select(s => s.GetExportedId()).ToList()
+            });
+        }
+        return stateLinks;
     }
 
     private static void CreateConfigFile(string folderPath, string logoFileName)
@@ -171,25 +197,30 @@ public class TourExporter
 
     private static void UnpackViewer(string viewerLocation, string folderPath)
     {
-        using var fileStream = File.OpenRead(viewerLocation);
-        using var zipInputStream = new ZipInputStream(fileStream);
-        while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
+        using (var fileStream = File.OpenRead(viewerLocation))
+        using (var zipInputStream = new ZipInputStream(fileStream))
         {
-            var entryFileName = zipEntry.Name;
-            var buffer = new byte[4096];
 
-            var fullZipToPath = Path.Combine(folderPath, entryFileName);
-            var directoryName = Path.GetDirectoryName(fullZipToPath);
-            if (directoryName.Length > 0)
-                Directory.CreateDirectory(directoryName);
-
-            if (Path.GetFileName(fullZipToPath).Length == 0)
+            while (zipInputStream.GetNextEntry() is ZipEntry zipEntry)
             {
-                continue;
-            }
+                var entryFileName = zipEntry.Name;
+                var buffer = new byte[4096];
 
-            using FileStream streamWriter = File.Create(fullZipToPath);
-            StreamUtils.Copy(zipInputStream, streamWriter, buffer);
+                var fullZipToPath = Path.Combine(folderPath, entryFileName);
+                var directoryName = Path.GetDirectoryName(fullZipToPath);
+                if (directoryName.Length > 0)
+                    Directory.CreateDirectory(directoryName);
+
+                if (Path.GetFileName(fullZipToPath).Length == 0)
+                {
+                    continue;
+                }
+
+                using (FileStream streamWriter = File.Create(fullZipToPath))
+                {
+                    StreamUtils.Copy(zipInputStream, streamWriter, buffer);
+                }
+            }
         }
     }
 
