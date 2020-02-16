@@ -111,7 +111,6 @@ public class TourExporter
             title = state.title,
             url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, stateId)}",
             type = textureSource.SourceType.ToString().ToLower(),
-            rotation = state.transform.rotation.eulerAngles,
             pictureRotation = state.transform.rotation,
             links = GetLinks(state),
             groupLinks = GetGroupLinks(state)
