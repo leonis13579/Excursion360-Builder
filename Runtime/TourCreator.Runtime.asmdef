@@ -1,7 +1,8 @@
 {
     "name": "TourCreator.Runtime",
     "references": [
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "TourCreator.Shared"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

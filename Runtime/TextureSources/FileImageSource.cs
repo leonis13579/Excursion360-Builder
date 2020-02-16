@@ -10,14 +10,11 @@ public class FileImageSource : TextureSource
 {
     public Texture texture = null;
 
-    public override SourceType GetSourceType()
-    {
-        return SourceType.Image;
-    }
+    public override Type SourceType => Type.Image;
 
     public override IEnumerator LoadTexture()
     {
-        loadedTexture = texture;
+        LoadedTexture = texture;
         yield break;
     }
 

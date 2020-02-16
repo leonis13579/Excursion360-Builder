@@ -7,15 +7,15 @@ using UnityEngine.Assertions;
 using UnityEditor;
 #endif
 
-/**
- * @brief Represents some place
- */
+/// <summary>
+/// Represents some place
+/// </summary>
 [ExecuteInEditMode]
 public class State : MonoBehaviour
 {
-    /**
-     * @brief Name of this place
-     */
+    /// <summary>
+    /// Name of this place
+    /// </summary>
     public string title;
 
     private Renderer _renderer;
@@ -33,22 +33,11 @@ public class State : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        TextureSource textureSource = GetComponent<TextureSource>();
-        if (textureSource == null)
-            gameObject.AddComponent<FileImageSource>();
-
         ReloadTexture();
 #endif
     }
 
 #if UNITY_EDITOR
-    private void OnDestroy()
-    {
-        var connections = GetComponents<Connection>();
-        foreach (var connection in connections)
-            if (connection.destination)
-                Undo.DestroyObjectImmediate(connection.destination);
-    }
 
     void Update()
     {
@@ -57,13 +46,6 @@ public class State : MonoBehaviour
 
     public void Reload()
     {
-        var connections = GetComponents<Connection>();
-        foreach (var connection in connections)
-        {
-            if (connection.destination)
-                connection.destination.destination = connection;
-        }
-
         ReloadTexture();
     }
 
@@ -78,7 +60,7 @@ public class State : MonoBehaviour
 
     private IEnumerator LoadTexture(TextureSource textureSource)
     {
-        yield return textureSource.LoadTexture();
+        yield return StartCoroutine(textureSource.LoadTexture());
 
         if (_renderer == null)
             _renderer = GetComponent<Renderer>();
@@ -87,7 +69,7 @@ public class State : MonoBehaviour
             _materialProperties = new MaterialPropertyBlock();
 
         _renderer.GetPropertyBlock(_materialProperties);
-        _materialProperties.SetTexture("_MainTex", textureSource.loadedTexture);
+        _materialProperties.SetTexture("_MainTex", textureSource.LoadedTexture);
         _renderer.SetPropertyBlock(_materialProperties);
     }
 #endif

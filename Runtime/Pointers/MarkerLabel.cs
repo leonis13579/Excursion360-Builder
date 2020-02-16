@@ -3,24 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-/**
- * @brief Text billboard
- * 
- * Used in default pointers
- */
+/// <summary>
+/// Text billboard
+/// <para>Used in default pointers</para>
+/// </summary>
 public class MarkerLabel : MonoBehaviour
 {
-    public string text
+    public void SetText(string text)
     {
-        set
-        {
-            if (textMesh == null)
-                return;
+        if (textMesh == null)
+            return;
 
-            textMesh.text = value;
-        }
+        textMesh.text = text;
     }
-
     private TextMeshProUGUI textMesh;
 
     void Start()

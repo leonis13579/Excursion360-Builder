@@ -10,8 +10,8 @@ namespace Packages.tour_creator.Editor.Protocol
     [Serializable]
     class Tour
     {
-        public string firstStateId = "state";
-        public List<State> states = new List<State>();
+        public string firstStateId;
+        public List<State> states;
         public Color[] colorSchemes;
     }
 }

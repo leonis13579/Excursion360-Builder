@@ -23,7 +23,9 @@ public class Tour : MonoBehaviour
     private static Tour _instance;
 
     public State firstState;
-    public Marker markerPrefab;
+
+    public ConnectionMarker connectionMarkerPrefab;
+    public GroupConnectionMarker groupConnectionMarkerPrefab;
 
     public Texture defaultTexture;
     public Texture logoTexture;
@@ -63,7 +65,7 @@ public class Tour : MonoBehaviour
     private MaterialPropertyBlock _materialProperties;
     private VideoPlayerPool _videoPlayerPool;
 
-    private List<Marker> _markers = new List<Marker>();
+    private readonly List<Marker> _markers = new List<Marker>();
 
     void Start()
     {
@@ -74,7 +76,7 @@ public class Tour : MonoBehaviour
 
         Assert.IsTrue(colorSchemes.Length > 0, "Need minimum 1 element in colors collection");
         _currentState = firstState;
-        PrepareState(_currentState, ref _currentTextureSource);
+        _currentTextureSource = PrepareState(_currentState);
 
         SpawnConnections();
     }
@@ -91,7 +93,7 @@ public class Tour : MonoBehaviour
             _transition += Time.deltaTime;
 
             if (_transition >= 1.0f) {
-                _currentTextureSource.inUse = false;
+                _currentTextureSource.InUse = false;
                 _currentState = _nextState;
                 _currentTextureSource = _nextTextureSource;
                 _nextState = null;
@@ -113,7 +115,7 @@ public class Tour : MonoBehaviour
         ClearConnections();
 
         _nextState = nextState;
-        PrepareState(_nextState, ref _nextTextureSource);
+        _nextTextureSource = PrepareState(_nextState);
 
         _transition = 0.0f;
     }
@@ -124,14 +126,28 @@ public class Tour : MonoBehaviour
         
         foreach (var connection in connections)
         {
-            Marker marker = Instantiate(markerPrefab, transform);
-            marker.name = "Marker to " + connection.destination.origin.title;
+            ConnectionMarker marker = Instantiate(connectionMarkerPrefab, transform);
+            marker.name = "Marker to " + connection.Destination.title;
             marker.connection = connection;
             marker.transform.localPosition = connection.orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();
             markerRenderer.material.SetColor("_Color", colorSchemes[connection.colorScheme].color);
             _markers.Add(marker);
         }
+
+        var groupConnections = _currentState.GetComponents<GroupConnection>();
+
+        foreach (var groupConnection in groupConnections)
+        {
+            GroupConnectionMarker marker = Instantiate(groupConnectionMarkerPrefab, transform);
+            marker.name = "Group Marker to " + groupConnection.title;
+            marker.groupConnection = groupConnection;
+            marker.transform.localPosition = groupConnection.orientation * Vector3.forward;
+            var markerRenderer = marker.GetComponent<Renderer>();
+            markerRenderer.material.SetColor("_Color", Color.blue);
+            _markers.Add(marker);
+        }
+
     }
 
     public void ClearConnections()
@@ -154,7 +170,7 @@ public class Tour : MonoBehaviour
         _renderer.GetPropertyBlock(_materialProperties);
 
         // Set main texture and orientation
-        _materialProperties.SetTexture("_MainTex", _currentTextureSource.loadedTexture);
+        _materialProperties.SetTexture("_MainTex", _currentTextureSource.LoadedTexture);
 
         var mr = _currentState.transform.rotation;
         _materialProperties.SetVector("_MainOrientation", new Vector4(
@@ -163,7 +179,7 @@ public class Tour : MonoBehaviour
         if (_nextState != null && _nextTextureSource != null)
         {
             // Set next texture and orientation
-            _materialProperties.SetTexture("_NextTex", _nextTextureSource.loadedTexture);
+            _materialProperties.SetTexture("_NextTex", _nextTextureSource.LoadedTexture);
 
             var nr = _nextState.transform.rotation;
             _materialProperties.SetVector("_NextOrientation", new Vector4(
@@ -176,17 +192,18 @@ public class Tour : MonoBehaviour
         _renderer.SetPropertyBlock(_materialProperties);
     }
 
-    private void PrepareState(State state, ref TextureSource textureSource)
+    private TextureSource PrepareState(State state)
     {
-        textureSource = state.GetComponent<TextureSource>();
-        textureSource.inUse = true;
+        var textureSource = state.GetComponent<TextureSource>();
+        textureSource.InUse = true;
         StartCoroutine(textureSource.LoadTexture());
 
         var connections = state.GetComponents<Connection>();
         foreach (var connection in connections)
         {
-            if (connection.destination)
-                StartCoroutine(connection.destination.GetComponent<TextureSource>().LoadTexture());
+            if (connection.Destination)
+                StartCoroutine(connection.Destination.GetComponent<TextureSource>().LoadTexture());
         }
+        return textureSource;
     }
 }

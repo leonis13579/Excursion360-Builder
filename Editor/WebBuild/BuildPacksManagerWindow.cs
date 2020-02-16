@@ -44,13 +44,13 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
 
         private void DrawInstalledList()
         {
-            if (GUILayout.Button("Скачать последнюю версию просмотрщика"))
+            if (GUILayout.Button("Download last viewer version"))
             {
                 StartBackgroundTask(DownloadViewer(packsLocation));
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Имеющиеся версии web просмотрщиков", EditorStyles.boldLabel);
-            if (GUILayout.Button("Обновить"))
+            GUILayout.Label("Available viewers", EditorStyles.boldLabel);
+            if (GUILayout.Button("Refresh"))
             {
                 FindBuildPacks();
             }
@@ -58,7 +58,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
             GUILayout.EndHorizontal();
             if (buildPacks.Count == 0)
             {
-                GUILayout.Label("Версии web просмотрщиков отcутствуют", EditorStyles.label);
+                GUILayout.Label("No web viewers", EditorStyles.label);
             }
             else
             {
@@ -74,20 +74,20 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Экспорт экскурсии", EditorStyles.boldLabel);
-            selectedbuildTagNum = EditorGUILayout.Popup("Версия просмотрщика", selectedbuildTagNum, buildPackTags);
+            EditorGUILayout.LabelField("Exporting excursion", EditorStyles.boldLabel);
+            selectedbuildTagNum = EditorGUILayout.Popup("Viewer version", selectedbuildTagNum, buildPackTags);
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel("Укажите путь");
+            EditorGUILayout.PrefixLabel("Target path");
             outFolderPath = EditorGUILayout.TextField(outFolderPath);
-            if (GUILayout.Button("Обзор"))
+            if (GUILayout.Button("..."))
             {
-                outFolderPath = EditorUtility.OpenFolderPanel("Выберете, куда вы хотите экспортировать экскурсию", outFolderPath, "");
+                outFolderPath = EditorUtility.OpenFolderPanel("Select folder to export", outFolderPath, "");
                 Repaint();
                 SceneView.RepaintAll();
             }
             EditorGUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Экспортировать экскурсию"))
+            if (GUILayout.Button("Export"))
             {
                 if (!TourExporter.TryGetTargetFolder(outFolderPath))
                 {
@@ -111,21 +111,21 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                     pack.Status = BuildPackStatus.Loading;
                     break;
                 case BuildPackStatus.Loading:
-                    EditorGUILayout.LabelField($"Загрузка...");
+                    EditorGUILayout.LabelField($"Downloading...");
                     break;
                 case BuildPackStatus.Loaded:
-                    EditorGUILayout.LabelField($"Опубликовано: {pack.PublishDate.ToString("yyyy-MM-dd")}");
-                    if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "Удалить"))
+                    EditorGUILayout.LabelField($"Publish date: {pack.PublishDate:yyyy-MM-dd}");
+                    if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "Remove"))
                     {
                         File.Delete(pack.Location);
                         FindBuildPacks();
                     }
                     break;
                 case BuildPackStatus.LoadingError:
-                    EditorGUILayout.LabelField($"Ошибка при загрузке");
+                    EditorGUILayout.LabelField($"Download error");
                     break;
                 default:
-                    EditorGUILayout.LabelField($"Непредвиденная ошибка");
+                    EditorGUILayout.LabelField($"Unexpected error");
                     break;
             }
             EditorGUI.indentLevel--;
@@ -167,7 +167,7 @@ namespace Packages.Excursion360_Builder.Editor.WebBuild
                     while (w.isDone == false)
                     {
                         yield return null;
-                        EditorUtility.DisplayProgressBar("Downloading", $"Получение информации о релизе {releaseId}", w.downloadProgress);
+                        EditorUtility.DisplayProgressBar("Downloading", $"Fetching release information {releaseId}", w.downloadProgress);
                     }
                     row = w.downloadHandler.text;
                     if (w.isHttpError)

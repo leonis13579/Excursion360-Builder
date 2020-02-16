@@ -27,7 +27,6 @@ public class TourExporter
             CreateConfigFile(folderPath, logoFileName);
 
 
-            Exported.Tour tour = new Exported.Tour();
 
             // Find first state
             if (Tour.Instance == null)
@@ -35,8 +34,6 @@ public class TourExporter
                 EditorUtility.DisplayDialog("Error", "There is no tour object on this scene!", "Ok");
                 return;
             }
-
-            tour.colorSchemes = Tour.Instance.colorSchemes.Select(cs => cs.color).ToArray();
 
             State firstState = Tour.Instance.firstState;
             if (firstState == null)
@@ -52,75 +49,32 @@ public class TourExporter
                 EditorUtility.DisplayDialog("Error", "There is no states on this scene to export!", "Ok");
                 return;
             }
+
+            Exported.Tour tour = new Exported.Tour
+            {
+                firstStateId = firstState.GetExportedId(),
+                colorSchemes = Tour.Instance.colorSchemes.Select(cs => cs.color).ToArray(),
+                states = new List<Exported.State>(),
+            };
+
+
             Debug.Log($"Finded {states.Length} states");
             // Pre process states
             UpdateProcess(0, states.Length, "Exporting", "");
 
-            Dictionary<int, string> stateIds = new Dictionary<int, string>();
-
             for (int i = 0; i < states.Length; ++i)
             {
                 var state = states[i];
 
-                TextureSource textureSource = state.GetComponent<TextureSource>();
-                if (textureSource == null)
+                if (!TryHandleState(state, folderPath, out var exportedState))
                 {
-                    EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+                    EditorUtility.DisplayDialog("Error", $"Error while exporting state {state.title}", "Ok");
                     return;
                 }
 
-                Exported.State exportedState = new Exported.State
-                {
-                    id = "state_" + i,
-                    title = state.title,
-                    url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, "state_" + i)}",
-                    type = textureSource.GetSourceType().ToString().ToLower(),
-                    rotation = state.transform.rotation.eulerAngles,
-                    pictureRotation = state.transform.rotation
-                };
-
-                stateIds.Add(state.GetInstanceID(), exportedState.id);
                 tour.states.Add(exportedState);
 
                 UpdateProcess(i + 1, states.Length, "Exporting", $"{i + 1}/{states.Length}: {state.title}");
-            }
-
-            // Assign first state id
-            stateIds.TryGetValue(firstState.GetInstanceID(), out tour.firstStateId);
-
-            // Process links
-            for (int i = 0; i < states.Length; ++i)
-            {
-                var state = states[i];
-                var exportedState = tour.states[i];
-
-                Debug.Log(state.title);
-
-                Connection[] connections = state.gameObject.GetComponents<Connection>();
-                if (connections == null || connections.Length == 0)
-                {
-                    EditorUtility.DisplayDialog("Warning", $"State {state.title} does not have connections!", "Ok");
-                    continue;
-                }
-
-                foreach (var connection in connections)
-                {
-                    Debug.Log($"{connection.origin.title} -- {connection.destination.origin.title}");
-                    if (!stateIds.TryGetValue(connection.destination.origin.GetInstanceID(), out string otherId))
-                    {
-                        EditorUtility.DisplayDialog("Warning", $"State {state.title} linked to {connection.destination.origin.title}, but id not found", "Ok");
-                        continue;
-                    }
-
-                    Vector3 direction = (connection.orientation * Vector3.forward).normalized;
-
-                    exportedState.links.Add(new Exported.StateLink()
-                    {
-                        id = otherId,
-                        rotation = connection.orientation,
-                        colorScheme = connection.colorScheme
-                    });
-                }
             }
 
             // Serialize and write
@@ -135,6 +89,77 @@ public class TourExporter
             EditorUtility.ClearProgressBar();
         }
         // Finish
+    }
+
+
+    private static bool TryHandleState(
+        State state, 
+        string folderPath,
+        out Exported.State exportedState)
+    {
+        exportedState = default;
+        TextureSource textureSource = state.GetComponent<TextureSource>();
+        if (textureSource == null)
+        {
+            EditorUtility.DisplayDialog("Error", "State has no texture source!", "Ok");
+            return false;
+        }
+        var stateId = state.GetExportedId();
+        exportedState = new Exported.State
+        {
+            id = stateId,
+            title = state.title,
+            url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, stateId)}",
+            type = textureSource.SourceType.ToString().ToLower(),
+            pictureRotation = state.transform.rotation,
+            links = GetLinks(state),
+            groupLinks = GetGroupLinks(state)
+        };
+        return true;
+    }
+
+    private static List<Exported.StateLink> GetLinks(State state)
+    {
+        var stateLinks = new List<Exported.StateLink>();
+        var connections = state.GetComponents<Connection>();
+        if (connections == null || connections.Length == 0)
+        {
+            Debug.LogWarning($"State {state.title} does not have connections!");
+            return stateLinks;
+        }
+
+        foreach (var connection in connections)
+        {
+            stateLinks.Add(new Exported.StateLink()
+            {
+                id = connection.Destination.GetExportedId(),
+                rotation = connection.orientation,
+                colorScheme = connection.colorScheme
+            });
+        }
+        return stateLinks;
+    }
+
+    private static List<Exported.GroupStateLink> GetGroupLinks(State state)
+    {
+        var stateLinks = new List<Exported.GroupStateLink>();
+        var connections = state.GetComponents<GroupConnection>();
+        if (connections == null || connections.Length == 0)
+        {
+            Debug.LogWarning($"State {state.title} does not have group connections!");
+            return stateLinks;
+        }
+
+        foreach (var connection in connections)
+        {
+            stateLinks.Add(new Exported.GroupStateLink()
+            {
+                title = connection.title,
+                rotation = connection.orientation,
+                stateIds = connection.states.Select(s => s.GetExportedId()).ToList()
+            });
+        }
+        return stateLinks;
     }
 
     private static void CreateConfigFile(string folderPath, string logoFileName)
@@ -154,9 +179,9 @@ public class TourExporter
         string path = AssetDatabase.GetAssetPath(Tour.Instance.logoTexture);
         if (string.IsNullOrEmpty(path))
         {
-            if (!EditorUtility.DisplayDialog("Внимание", "Вы не указали логотип для перехода между локациями. Уверены, что хотите оставить логотип по умолчанию?", "Да, продолжить", "Отмена"))
+            if (!EditorUtility.DisplayDialog("Warning", "There is no logo to navigate between locations. Are you sure you want to leave the default logo?", "Yes, continue", "Cancel"))
             {
-                EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+                EditorUtility.DisplayDialog("Cancel", "Operation cancelled", "Ok");
                 return false;
             }
             logoPath = "";
@@ -203,12 +228,12 @@ public class TourExporter
     {
         if (!Directory.Exists(folderPath))
         {
-            EditorUtility.DisplayDialog("Ошибка", "Выборанная директория не существует", "Ок");
+            EditorUtility.DisplayDialog("Error", "Selected directory does not exist", "Ок");
             return false;
         }
-        if (!EditorUtility.DisplayDialog("Внимание", "Все файлы в выбранной папке будут удалены, Вы уверены?", "Да, удалить", "Отмена"))
+        if (!EditorUtility.DisplayDialog("Warning", "All files in the selected folder will be deleted, are you sure?", "Yes, delete", "Cancel"))
         {
-            EditorUtility.DisplayDialog("Ошибка", "Операция отменена", "Ок");
+            EditorUtility.DisplayDialog("Cancel", "Operation cancelled", "Ok");
             return false;
         }
 
@@ -216,14 +241,14 @@ public class TourExporter
         for (int i = 0; i < files.Length; i++)
         {
             var filePath = files[i];
-            UpdateProcess(i, files.Length, "Удаление файлов", filePath);
+            UpdateProcess(i, files.Length, "Deleting old files", filePath);
             try
             {
                 File.Delete(filePath);
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Ошибка", $"Неполучается удалить файл {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ок");
+                EditorUtility.DisplayDialog("Error", $"Can't delete file {filePath}\n{ex.Message}\n{ex.StackTrace}", "Ok");
                 return false;
             }
         }

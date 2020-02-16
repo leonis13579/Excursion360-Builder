@@ -24,16 +24,14 @@ public class FileVideoSource : TextureSource
     private VideoPlayer _currentVideoPlayer = null;
     private RenderTexture _currentRenderTexture = null;
 
-    public override SourceType GetSourceType()
-    {
-        return SourceType.Video;
-    }
+    public override Type SourceType => Type.Video;
+
 
     public override IEnumerator LoadTexture()
     {
         if (videoClip == null)
         {
-            loadedTexture = null;
+            LoadedTexture = null;
             _currentRenderTexture = null;
             _currentVideoClip = null;
             yield break;
@@ -51,9 +49,9 @@ public class FileVideoSource : TextureSource
 #endif
         }
 
-        loadedTexture = _currentRenderTexture;
+        LoadedTexture = _currentRenderTexture;
 
-        if (inUse && _currentRenderTexture != null && _currentVideoPlayer && !_currentVideoPlayer.isPlaying)
+        if (InUse && _currentRenderTexture != null && _currentVideoPlayer && !_currentVideoPlayer.isPlaying)
         {
             _currentVideoPlayer.targetTexture = _currentRenderTexture;
         }

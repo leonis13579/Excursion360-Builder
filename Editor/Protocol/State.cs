@@ -15,8 +15,8 @@ namespace Packages.tour_creator.Editor.Protocol
         public string title;
         public string url;
         public string type;
-        public Vector3 rotation;
         public Quaternion pictureRotation;
-        public List<StateLink> links = new List<StateLink>();
+        public List<StateLink> links;
+        public List<GroupStateLink> groupLinks;
     }
 }

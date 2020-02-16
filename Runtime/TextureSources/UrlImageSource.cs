@@ -11,16 +11,13 @@ public class UrlImageSource : TextureSource
     private string _currentUrl = null;
     private Texture _currentTexture = null;
 
-    public override SourceType GetSourceType()
-    {
-        return SourceType.Image;
-    }
+    public override Type SourceType => Type.Image;
 
     public override IEnumerator LoadTexture()
     {
         if (textureUrl == "")
         {
-            loadedTexture = null;
+            LoadedTexture = null;
             _currentUrl = null;
             _currentTexture = null;
             yield break;
@@ -43,7 +40,7 @@ public class UrlImageSource : TextureSource
                 _currentTexture = DownloadHandlerTexture.GetContent(textureRequest);
         }
 
-        loadedTexture = _currentTexture;
+        LoadedTexture = _currentTexture;
     }
 
 #if UNITY_EDITOR
