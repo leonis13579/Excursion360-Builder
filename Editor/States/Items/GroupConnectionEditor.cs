@@ -9,7 +9,6 @@ using UnityEngine;
 
 class GroupConnectionEditor : EditorBase
 {
-    private Vector2 groupsScroll = Vector2.zero;
 
     public void Draw(State state)
     {
@@ -18,7 +17,6 @@ class GroupConnectionEditor : EditorBase
             Undo.AddComponent<GroupConnection>(state.gameObject);
         }
         EditorGUILayout.Space();
-        groupsScroll = EditorGUILayout.BeginScrollView(groupsScroll);
         var groupConnections = state.GetComponents<GroupConnection>();
         foreach (var groupConnection in groupConnections)
         {
@@ -111,7 +109,6 @@ class GroupConnectionEditor : EditorBase
             EditorGUI.indentLevel--;
             EditorGUI.indentLevel--;
         }
-        EditorGUILayout.EndScrollView();
     }
 }
 #endif

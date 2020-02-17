@@ -16,7 +16,7 @@ public class StateEditorWindow : EditorWindow
 
     private TextureSourceEditor _textureSourceEditor = new TextureSourceEditor();
 
-    private Vector2 _connectionsListScroll = Vector2.zero;
+    private Vector2 _itemsScroll = Vector2.zero;
 
     private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
     private readonly FieldItemEditor fieldItemEditor = new FieldItemEditor();
@@ -164,13 +164,13 @@ public class StateEditorWindow : EditorWindow
 
         EditorGUILayout.Space();
 
+        _itemsScroll = EditorGUILayout.BeginScrollView(_itemsScroll);
         // Draw connections list
         connectionsOpened = EditorGUILayout.Foldout(connectionsOpened, "Connections: ", true);
         if (connectionsOpened)
         {
             itemsOpened = false;
 
-            _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
 
             var connections = state.GetComponents<Connection>();
 
@@ -208,7 +208,6 @@ public class StateEditorWindow : EditorWindow
                 connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
                 EditorGUILayout.Space();
             }
-            EditorGUILayout.EndScrollView();
         }
 
         groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections", true);
@@ -222,6 +221,7 @@ public class StateEditorWindow : EditorWindow
         {
             fieldItemEditor.Draw(state);
         }
+        EditorGUILayout.EndScrollView();
 
         // TODO Content draw
         //itemsOpened = EditorGUILayout.Foldout(itemsOpened, "Items: ", true);

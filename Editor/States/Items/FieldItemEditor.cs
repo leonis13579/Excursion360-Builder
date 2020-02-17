@@ -58,7 +58,6 @@ namespace Excursion360_Builder.Editor.States.Items
                 {
                     previewTexture = EditorGUIUtility.whiteTexture;
                 }
-                var typename = previewTexture.GetType();
                 fieldItem.texture = EditorGUI.ObjectField(EditorGUILayout.GetControlRect(false, 150.0f), fieldItem.texture, typeof(Texture2D), false) as Texture;
             }
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Core;
 using Packages.tour_creator.Editor.WebBuild;
+using Excursion360_Builder.Shared.States.Items.Field;
 
 #if UNITY_EDITOR
 
@@ -113,20 +114,44 @@ public class TourExporter
             type = textureSource.SourceType.ToString().ToLower(),
             pictureRotation = state.transform.rotation,
             links = GetLinks(state),
-            groupLinks = GetGroupLinks(state)
+            groupLinks = GetGroupLinks(state),
+            fieldItems = GetFieldItems(state, folderPath)
         };
         return true;
+    }
+
+    private static List<Exported.FieldItem> GetFieldItems(State state, string folderPath)
+    {
+        var fieldItems = new List<Exported.FieldItem>();
+
+        var unityFieldConnections = state.GetComponents<FieldItem>();
+
+        foreach (var fieldItem in unityFieldConnections)
+        {
+            fieldItems.Add(new Exported.FieldItem
+            {
+                title = fieldItem.title,
+                vertices = fieldItem.vertices.Select(v => v.Orientation).ToArray(),
+                imageUrl = $"{Tour.Instance.linkPrefix}{ExportTexture(fieldItem.texture, folderPath, fieldItem.GetExportedId().ToString())}"
+            });
+        }
+
+        return fieldItems;
+    }
+
+    private static string ExportTexture(Texture textureToExport, string destination, string fileName)
+    {
+        string path = AssetDatabase.GetAssetPath(textureToExport);
+        string filename = fileName + Path.GetExtension(path);
+
+        File.Copy(path, Path.Combine(destination, filename));
+        return filename;
     }
 
     private static List<Exported.StateLink> GetLinks(State state)
     {
         var stateLinks = new List<Exported.StateLink>();
         var connections = state.GetComponents<Connection>();
-        if (connections == null || connections.Length == 0)
-        {
-            Debug.LogWarning($"State {state.title} does not have connections!");
-            return stateLinks;
-        }
 
         foreach (var connection in connections)
         {
