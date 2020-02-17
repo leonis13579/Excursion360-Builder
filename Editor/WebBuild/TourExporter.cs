@@ -133,7 +133,7 @@ public class TourExporter
             stateLinks.Add(new Exported.StateLink()
             {
                 id = connection.Destination.GetExportedId(),
-                rotation = connection.orientation,
+                rotation = connection.Orientation,
                 colorScheme = connection.colorScheme
             });
         }
@@ -155,7 +155,7 @@ public class TourExporter
             stateLinks.Add(new Exported.GroupStateLink()
             {
                 title = connection.title,
-                rotation = connection.orientation,
+                rotation = connection.Orientation,
                 stateIds = connection.states.Select(s => s.GetExportedId()).ToList()
             });
         }

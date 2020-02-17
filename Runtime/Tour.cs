@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using Excursion360_Builder.Runtime.Markers;
+using Excursion360_Builder.Shared.States.Items.Field;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Video;
@@ -26,6 +29,7 @@ public class Tour : MonoBehaviour
 
     public ConnectionMarker connectionMarkerPrefab;
     public GroupConnectionMarker groupConnectionMarkerPrefab;
+    public FieldItemMarker baseFieldItemGameObject;
 
     public Texture defaultTexture;
     public Texture logoTexture;
@@ -129,7 +133,7 @@ public class Tour : MonoBehaviour
             ConnectionMarker marker = Instantiate(connectionMarkerPrefab, transform);
             marker.name = "Marker to " + connection.Destination.title;
             marker.connection = connection;
-            marker.transform.localPosition = connection.orientation * Vector3.forward;
+            marker.transform.localPosition = connection.Orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();
             markerRenderer.material.SetColor("_Color", colorSchemes[connection.colorScheme].color);
             _markers.Add(marker);
@@ -142,10 +146,42 @@ public class Tour : MonoBehaviour
             GroupConnectionMarker marker = Instantiate(groupConnectionMarkerPrefab, transform);
             marker.name = "Group Marker to " + groupConnection.title;
             marker.groupConnection = groupConnection;
-            marker.transform.localPosition = groupConnection.orientation * Vector3.forward;
+            marker.transform.localPosition = groupConnection.Orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();
             markerRenderer.material.SetColor("_Color", Color.blue);
             _markers.Add(marker);
+        }
+
+        var fieldItems = _currentState.GetComponents<FieldItem>();
+
+
+        foreach (var fieldItem in fieldItems)
+        {
+            var fieldItemMarker = Instantiate(baseFieldItemGameObject, transform);
+            fieldItemMarker.fieldItem = fieldItem;
+            var vertices = new Vector3[]
+            {
+                fieldItem.vertices[0].Orientation * Vector3.forward,
+                fieldItem.vertices[1].Orientation * Vector3.forward,
+                fieldItem.vertices[2].Orientation * Vector3.forward,
+                fieldItem.vertices[3].Orientation * Vector3.forward
+            };
+            var tris = new int[]
+            {
+                0,1,2,
+                0,2,3
+            };
+            MeshRenderer meshRenderer = fieldItemMarker.gameObject.AddComponent<MeshRenderer>();
+            var mat = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.rexagon.tour-creator/Materials/FieldItem.mat");
+            meshRenderer.sharedMaterial = mat;
+            MeshFilter meshFilter = fieldItemMarker.gameObject.AddComponent<MeshFilter>();
+            Mesh mesh = new Mesh
+            {
+                vertices = vertices,
+                triangles = tris
+            };
+            meshFilter.mesh = mesh;
+            fieldItemMarker.gameObject.AddComponent<MeshCollider>();
         }
 
     }

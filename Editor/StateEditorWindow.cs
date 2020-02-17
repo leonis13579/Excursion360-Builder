@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Excursion360_Builder.Editor.States.Items;
 
 #if UNITY_EDITOR
 
@@ -18,10 +19,12 @@ public class StateEditorWindow : EditorWindow
     private Vector2 _connectionsListScroll = Vector2.zero;
 
     private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
+    private readonly FieldItemEditor fieldItemEditor = new FieldItemEditor();
     private readonly ContentEditor contentEditor = new ContentEditor();
 
     private bool connectionsOpened = true;
     private bool groupConnectionsOpened = true;
+    private bool fieldItemsOpened = true;
     private bool itemsOpened = true;
 
     private void OnEnable()
@@ -184,12 +187,12 @@ public class StateEditorWindow : EditorWindow
                 }
 
                 var buttonStyle = Styles.ToggleButtonStyleNormal;
-                if (StateItemPlaceEditor.EditableItem == connection)
+                if (StateItemPlaceEditor.EditableItem == (object)connection)
                     buttonStyle = Styles.ToggleButtonStyleToggled;
 
                 if (GUILayout.Button("edit", buttonStyle))
                 {
-                    if (StateItemPlaceEditor.EditableItem == connection)
+                    if (StateItemPlaceEditor.EditableItem == (object)connection)
                     {
                         StateItemPlaceEditor.CleadEditing();
                     }
@@ -212,6 +215,12 @@ public class StateEditorWindow : EditorWindow
         if (groupConnectionsOpened)
         {
             groupConnectionEditor.Draw(state);
+        }
+
+        fieldItemsOpened = EditorGUILayout.Foldout(fieldItemsOpened, "Field items", true);
+        if (fieldItemsOpened)
+        {
+            fieldItemEditor.Draw(state);
         }
 
         // TODO Content draw
@@ -319,10 +328,10 @@ public class StateEditorWindow : EditorWindow
             connectionSecond = Undo.AddComponent<Connection>(secondState.gameObject);
 
             connectionFirst.Destination = secondState;
-            connectionFirst.orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
+            connectionFirst.Orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
 
             connectionSecond.Destination = firstState;
-            connectionSecond.orientation = Quaternion.FromToRotation(Vector3.forward, -directionToSecond);
+            connectionSecond.Orientation = Quaternion.FromToRotation(Vector3.forward, -directionToSecond);
         }
         else
         {

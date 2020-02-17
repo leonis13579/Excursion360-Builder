@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Excursion360_Builder.Shared.States.Items;
+using UnityEngine;
 
 /**
  * @brief Represents connection of origin state to destination state
@@ -10,7 +11,7 @@
  */
 
  
-public class Connection : StateItem
+public class Connection : MonoBehaviourStateItem
 {
 
     /// <summary>
