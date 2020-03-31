@@ -48,6 +48,7 @@ class GroupConnectionEditor : EditorBase
             }
 
             EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
 
             var connections = state.GetComponents<Connection>();
@@ -77,6 +78,23 @@ class GroupConnectionEditor : EditorBase
             {
                 GUILayout.Label("No available connections to add");
             }
+
+            if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), $"Add info"))
+            {
+                Undo.RecordObject(groupConnection, "Add info reference");
+                groupConnection.infos.Add("");
+            }
+            for (int i = 0; i < groupConnection.infos.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                groupConnection.infos[i] = EditorGUILayout.TextField("Info title: ", groupConnection.infos[i]);
+                if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(GUILayout.Width(80))), $"Delete", Styles.DeleteButtonStyle))
+                {
+                    groupConnection.infos.RemoveAt(i);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("State references:");
             EditorGUI.indentLevel++;

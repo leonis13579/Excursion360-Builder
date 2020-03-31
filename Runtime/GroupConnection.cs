@@ -10,5 +10,6 @@ public class GroupConnection : MonoBehaviourStateItem
 {
     public string title;
     public List<State> states = new List<State>();
+    public List<string> infos = new List<string>();
 }
 

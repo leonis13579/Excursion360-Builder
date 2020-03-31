@@ -36,6 +36,18 @@ public class GroupConnectionMarker : Marker
             newButton.GetComponentInChildren<TextMeshProUGUI>().SetText(targetState.title);
             newButton.GetComponent<Button>().onClick.AddListener(() => Tour.Instance.StartTransition(targetState));
         }
+
+        for (int i = 0; i < groupConnection.infos.Count; i++)
+        {
+            var newButton = Instantiate(buttonPrefab, buttonsHolder.transform);
+            newButton.GetComponent<Image>().color = Color.gray;
+            newButton.transform.localPosition =
+                newButton.transform.localPosition
+                 + Vector3.down * positionInitialDelta
+                 + Vector3.down * (i + 1) * positionDelta;
+            var targetState = groupConnection.infos[i];
+            newButton.GetComponentInChildren<TextMeshProUGUI>().SetText(targetState);
+        }
     }
 
     public override void HandleInteract()

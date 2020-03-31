@@ -11,5 +11,6 @@ namespace Packages.tour_creator.Editor.Protocol
     {
         public string title;
         public List<string> stateIds;
+        public List<string> infos;
     }
 }
