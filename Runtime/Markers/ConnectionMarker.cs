@@ -12,7 +12,7 @@ public class ConnectionMarker : Marker
     /// </summary>
     public Connection connection;
 
-    public override string Title => connection.Destination.title;
+    public override string Title => connection.GetDestenationTitle();
 
     public override void HandleInteract()
     {

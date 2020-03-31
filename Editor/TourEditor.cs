@@ -78,23 +78,6 @@ public class TourEditor
             SetItemsVisible(_areItemsVisible);
             SceneView.RepaintAll();
         };
-        CleanEmptyConnections();
-    }
-
-    static void CleanEmptyConnections()
-    {
-        var allConnections = GameObject.FindObjectsOfType<Connection>();
-        Debug.Log($"Finded {allConnections.Length} connections");
-        var deleted = 0;
-        foreach (var item in allConnections)
-        {
-            if (!item.Destination || item.Destination == null)
-            {
-                GameObject.DestroyImmediate(item);
-                deleted++;
-            }
-        }
-        Debug.Log($"Deleted {deleted} connections");
     }
 
 

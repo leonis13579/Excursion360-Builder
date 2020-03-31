@@ -110,7 +110,7 @@ public class TourExporter
         {
             id = stateId,
             title = state.title,
-            url = $"{Tour.Instance.linkPrefix}{textureSource.Export(folderPath, stateId)}",
+            url = textureSource.Export(folderPath, stateId),
             type = textureSource.SourceType.ToString().ToLower(),
             pictureRotation = state.transform.rotation,
             links = GetLinks(state),
@@ -132,7 +132,7 @@ public class TourExporter
             {
                 title = fieldItem.title,
                 vertices = fieldItem.vertices.Select(v => v.Orientation).ToArray(),
-                imageUrl = $"{Tour.Instance.linkPrefix}{ExportTexture(fieldItem.texture, folderPath, fieldItem.GetExportedId().ToString())}"
+                imageUrl = ExportTexture(fieldItem.texture, folderPath, fieldItem.GetExportedId().ToString())
             });
         }
 

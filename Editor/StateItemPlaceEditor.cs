@@ -17,6 +17,7 @@ public class StateItemPlaceEditor
     static StateItemPlaceEditor()
     {
         SceneView.duringSceneGui += SceneGui;
+        Selection.selectionChanged += CleadEditing;
     }
 
     public static void EnableEditing(State editableState, IStateItem editableItem, UnityEngine.Color cubeColor)

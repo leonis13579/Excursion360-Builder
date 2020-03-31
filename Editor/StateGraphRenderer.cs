@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Excursion360_Builder.Shared.States.Items.Field;
+using Packages.Excursion360_Builder.Editor.Extensions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -86,24 +87,33 @@ public class StateGraphRenderer
                 0.05f,
                 EventType.Repaint
             );
+            var firstConnectionPosition = state.transform.position + item.Orientation * Vector3.forward;
             foreach (var targetState in item.states)
             {
-                var firstConnectionPosition = state.transform.position + item.Orientation * Vector3.forward;
-                var secondConnectionPosition = targetState.transform.position;
-
-                var backConnection = targetState.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
-
-                if (backConnection == null)
+                Vector3 secondConnectionPosition;
+                if (targetState == null)
                 {
-                    var backGroupConnection = targetState.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
-                    if (backGroupConnection != null)
-                    {
-                        secondConnectionPosition += backGroupConnection.Orientation * Vector3.forward;
-                    }
+                    secondConnectionPosition = firstConnectionPosition + Vector3.up * 5;
                 }
                 else
                 {
-                    secondConnectionPosition += backConnection.Orientation * Vector3.forward;
+
+                    secondConnectionPosition = targetState.transform.position;
+
+                    var backConnection = targetState.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
+
+                    if (backConnection == null)
+                    {
+                        var backGroupConnection = targetState.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
+                        if (backGroupConnection != null)
+                        {
+                            secondConnectionPosition += backGroupConnection.Orientation * Vector3.forward;
+                        }
+                    }
+                    else
+                    {
+                        secondConnectionPosition += backConnection.Orientation * Vector3.forward;
+                    }
                 }
 
                 if (showConnections)
@@ -139,30 +149,35 @@ public class StateGraphRenderer
 
         foreach (var connection in connections)
         {
-
-            var firstConnectionPosition = connection.transform.position + connection.Orientation * Vector3.forward;
-            var secondConnectionPosition = connection.Destination.transform.position;
-            var backConnection = connection.Destination.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
-
-            if (backConnection == null)
+            var firstConnectionPosition = connection.GetOriginPosition();
+            var secondConnectionPosition = connection.GetDestinationPosition(5);
+            var backConnection = connection.GetBackConnection();
+            var lineColor = Color.yellow;
+            var dotColor = Color.red;
+            if (!backConnection)
             {
-                var backGroupConnection = connection.Destination.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
-                if (backGroupConnection != null)
+                var backGroupConnection = connection.GetBackGroupConnection();
+                if (backGroupConnection)
                 {
-                    secondConnectionPosition += backGroupConnection.Orientation * Vector3.forward;
+                    secondConnectionPosition = backGroupConnection.GetOriginPosition();
                 }
             }
             else
             {
-                secondConnectionPosition += backConnection.Orientation * Vector3.forward;
+                secondConnectionPosition = backConnection.GetOriginPosition();
+            }
+
+            if (!connection.Destination)
+            {
+                lineColor = dotColor = Color.black;
             }
 
             if (showConnections)
             {
-                Handles.color = Color.yellow;
+                Handles.color = lineColor;
                 Handles.DrawLine(firstConnectionPosition, secondConnectionPosition);
 
-                Handles.color = Color.red;
+                Handles.color = dotColor;
                 Handles.DotHandleCap(
                     0,
                     firstConnectionPosition,
@@ -186,6 +201,7 @@ public class StateGraphRenderer
             Handles.Label(state.transform.position, state.title, _labelsStyle);
         }
     }
+
 
     private void RenderFieldItems(State state)
     {
