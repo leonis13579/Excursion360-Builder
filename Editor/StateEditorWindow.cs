@@ -4,6 +4,7 @@ using System.Linq;
 using Excursion360_Builder.Editor.States.Items;
 using Packages.Excursion360_Builder.Editor.Extensions;
 using Packages.Excursion360_Builder.Editor;
+using Packages.Excursion360_Builder.Editor.States.Items;
 
 #if UNITY_EDITOR
 
@@ -22,9 +23,10 @@ public class StateEditorWindow : EditorWindow
 
     private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
     private readonly FieldItemEditor fieldItemEditor = new FieldItemEditor();
-    private readonly ContentEditor contentEditor = new ContentEditor();
+    private readonly ConnectionsToStateEditor connectionsToStateEditor = new ConnectionsToStateEditor();
 
-    private bool connectionsOpened = true;
+    private bool connectionsFromOpened = true;
+    private bool connectionsToOpened = true;
     private bool groupConnectionsOpened = true;
     private bool fieldItemsOpened = true;
 
@@ -167,8 +169,8 @@ public class StateEditorWindow : EditorWindow
 
         _itemsScroll = EditorGUILayout.BeginScrollView(_itemsScroll);
         // Draw connections list
-        connectionsOpened = EditorGUILayout.Foldout(connectionsOpened, "Connections: ", true);
-        if (connectionsOpened)
+        connectionsFromOpened = EditorGUILayout.Foldout(connectionsFromOpened, "Connections from that:", true);
+        if (connectionsFromOpened)
         {
             var connections = state.GetComponents<Connection>();
             EditorGUI.indentLevel++;
@@ -220,7 +222,13 @@ public class StateEditorWindow : EditorWindow
             EditorGUI.indentLevel--;
         }
 
-        groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections", true);
+        connectionsToOpened = EditorGUILayout.Foldout(connectionsToOpened, "Connections to that:", true);
+        if (connectionsToOpened)
+        {
+            connectionsToStateEditor.Draw(state);
+        }
+
+        groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections:", true);
         if (groupConnectionsOpened)
         {
             groupConnectionEditor.Draw(state);

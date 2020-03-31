@@ -2,6 +2,7 @@
 using UnityEngine.Assertions;
 using Packages.tour_creator.Editor;
 using Packages.Excursion360_Builder.Editor.WebBuild;
+using Packages.Excursion360_Builder.Editor.SceneRenderers;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -25,6 +26,7 @@ public class TourEditor
     /// </summary>
     public static StateGraphRenderer StateGraphRenderer;
 
+    public static ViewDirectionRenderer ViewDirectionRenderer;
 
     private const string GROUP_NAME = "Tour Creator";
 
@@ -64,7 +66,9 @@ public class TourEditor
 
         // Create renderer
         StateGraphRenderer = new StateGraphRenderer();
+        ViewDirectionRenderer = new ViewDirectionRenderer();
         SceneView.duringSceneGui += StateGraphRenderer.RenderStateGraph;
+        SceneView.duringSceneGui += ViewDirectionRenderer.Render;
 
         // Load settings
         _areConnectionsVisible = EditorPrefs.GetBool(MENU_ITEM_SHOW_CONNECTIONS, true);

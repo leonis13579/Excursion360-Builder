@@ -1,4 +1,5 @@
 ﻿using Excursion360_Builder.Shared.States.Items;
+using Packages.Excursion360_Builder.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,29 +50,9 @@ public class StateItemPlaceEditor
             Vector3.one * 0.2f
         );
 
-        if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+        if (InteractionHelper.GetStateClickPoint(EditableState, out var rotation))
         {
-            GUIUtility.hotControl = GUIUtility.GetControlID(FocusType.Passive);
-            Event.current.Use();
-
-            SphereCollider collider = EditableState.GetComponent<SphereCollider>();
-            Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-
-            //if ((state.transform.position - ray.origin).magnitude <= collider.radius * collider.radius)
-            ray.origin -= ray.direction * collider.radius * 4;
-
-            if (collider.Raycast(ray, out RaycastHit hit, 100.0f))
-            {
-                var toCenterDirection = EditableState.transform.position - hit.point;
-                var rightDirection = Vector3.Cross(toCenterDirection, ray.direction);
-                var normal = Vector3.Cross(rightDirection, ray.direction);
-                var hitPosition = EditableState.transform.position + StateEditorWindow.ReflectDirection(toCenterDirection, normal);
-
-                Undo.RecordObject(EditableState, "Undo orientation change");
-
-                EditableItem.Orientation = Quaternion.FromToRotation(Vector3.forward,
-                    hitPosition - EditableState.transform.position);
-            }
+            EditableItem.Orientation = rotation;
         }
     }
 }

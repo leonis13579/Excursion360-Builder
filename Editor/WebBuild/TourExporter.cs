@@ -159,7 +159,9 @@ public class TourExporter
             {
                 id = connection.Destination.GetExportedId(),
                 rotation = connection.Orientation,
-                colorScheme = connection.colorScheme
+                colorScheme = connection.colorScheme,
+                rotationAfterStepAngleOverridden = connection.rotationAfterStepAngleOverridden,
+                rotationAfterStepAngle = connection.rotationAfterStepAngle
             });
         }
         return stateLinks;
@@ -171,7 +173,6 @@ public class TourExporter
         var connections = state.GetComponents<GroupConnection>();
         if (connections == null || connections.Length == 0)
         {
-            Debug.LogWarning($"State {state.title} does not have group connections!");
             return stateLinks;
         }
 
@@ -181,7 +182,16 @@ public class TourExporter
             {
                 title = connection.title,
                 rotation = connection.Orientation,
-                stateIds = connection.states.Select(s => s.GetExportedId()).ToList()
+                stateIds = connection.states.Select(s => s.GetExportedId()).ToList(),
+                infos = connection.infos.ToList(),
+                groupStateRotationOverrides = connection
+                    .rotationAfterStepAngles
+                    .Select(p => new Exported.GroupStateLinkRotationOverride
+                    {
+                        stateId = p.state.GetExportedId(),
+                        rotationAfterStepAngle = p.rotationAfterStepAngle
+                    })
+                    .ToList()
             });
         }
         return stateLinks;

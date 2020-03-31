@@ -102,7 +102,6 @@ public class Tour : MonoBehaviour
                 _nextState = null;
                 _nextTextureSource = null;
                 _transition = 0.0f;
-
                 SpawnConnections();
             }
         }
@@ -114,6 +113,8 @@ public class Tour : MonoBehaviour
     {
         if (_nextState != null || _transition > 0.0f)
             return;
+
+
 
         ClearConnections();
 

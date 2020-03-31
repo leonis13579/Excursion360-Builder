@@ -39,6 +39,8 @@ public class Connection : MonoBehaviourStateItem
 
     private State _origin; /// Cache
 
+    public bool rotationAfterStepAngleOverridden;
+    public float rotationAfterStepAngle;
     public string GetDestenationTitle() =>
             Destination ?
             Destination.title :

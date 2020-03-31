@@ -238,8 +238,13 @@ public class StateGraphRenderer
             centralPosition /= item.vertices.Length;
             Handles.Label(centralPosition, item.title, _groupItemLabelStyle);
         }
+    }
+
+    private void RenderViewPoint(State state)
+    {
 
     }
+
 
 }
 
