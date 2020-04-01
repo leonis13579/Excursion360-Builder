@@ -46,14 +46,14 @@ public class GroupConnectionMarker : Marker
                 }
             });
         }
-
+        var positionAfterButtonsDelta = positionInitialDelta + groupConnection.states.Count * positionDelta;
         for (int i = 0; i < groupConnection.infos.Count; i++)
         {
             var newButton = Instantiate(buttonPrefab, buttonsHolder.transform);
             newButton.GetComponent<Image>().color = Color.gray;
             newButton.transform.localPosition =
                 newButton.transform.localPosition
-                 + Vector3.down * positionInitialDelta
+                 + Vector3.down * positionAfterButtonsDelta
                  + Vector3.down * (i + 1) * positionDelta;
             var targetState = groupConnection.infos[i];
             newButton.GetComponentInChildren<TextMeshProUGUI>().SetText(targetState);
