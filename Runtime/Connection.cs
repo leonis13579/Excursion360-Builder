@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Excursion360_Builder.Shared.States.Items;
+using System.Linq;
+using UnityEngine;
 
 /**
  * @brief Represents connection of origin state to destination state
@@ -10,7 +12,7 @@
  */
 
  
-public class Connection : StateItem
+public class Connection : MonoBehaviourStateItem
 {
 
     /// <summary>
@@ -36,4 +38,11 @@ public class Connection : StateItem
     public State Destination;
 
     private State _origin; /// Cache
+
+    public bool rotationAfterStepAngleOverridden;
+    public float rotationAfterStepAngle;
+    public string GetDestenationTitle() =>
+            Destination ?
+            Destination.title :
+            "NO DESTINATION !!!";
 }

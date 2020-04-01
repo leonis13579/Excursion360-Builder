@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#pragma warning disable CS0649 // never assigned
+
 namespace Packages.tour_creator.Editor.WebBuild.GitHubAPI
 {
     [Serializable]
@@ -16,3 +18,5 @@ namespace Packages.tour_creator.Editor.WebBuild.GitHubAPI
         public AssetResponse[] assets;
     }
 }
+
+#pragma warning restore CS0649 // never assigned

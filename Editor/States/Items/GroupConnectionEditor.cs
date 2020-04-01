@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Packages.Excursion360_Builder.Editor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,18 +10,14 @@ using UnityEngine;
 
 class GroupConnectionEditor : EditorBase
 {
-    private Vector2 groupsScroll = Vector2.zero;
 
     public void Draw(State state)
     {
-        EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Add"))
         {
             Undo.AddComponent<GroupConnection>(state.gameObject);
         }
-        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
-        groupsScroll = EditorGUILayout.BeginScrollView(groupsScroll);
         var groupConnections = state.GetComponents<GroupConnection>();
         foreach (var groupConnection in groupConnections)
         {
@@ -33,12 +30,14 @@ class GroupConnectionEditor : EditorBase
             groupConnection.title = EditorGUILayout.TextField("Title:", groupConnection.title);
 
             var buttonStyle = Styles.ToggleButtonStyleNormal;
-            if (StateItemPlaceEditor.EditableItem == groupConnection)
+            if (StateItemPlaceEditor.EditableItem == (object)groupConnection)
                 buttonStyle = Styles.ToggleButtonStyleToggled;
 
-            if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "edit", buttonStyle))
+            var isEditable = StateItemPlaceEditor.EditableItem == (object)groupConnection;
+
+            if (GUI.Toggle(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), isEditable, "edit", "Button") != isEditable)
             {
-                if (StateItemPlaceEditor.EditableItem == groupConnection)
+                if (isEditable)
                 {
                     StateItemPlaceEditor.CleadEditing();
                 }
@@ -48,6 +47,7 @@ class GroupConnectionEditor : EditorBase
                 }
             }
 
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
 
 
@@ -78,12 +78,30 @@ class GroupConnectionEditor : EditorBase
             {
                 GUILayout.Label("No available connections to add");
             }
+
+            if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), $"Add info"))
+            {
+                Undo.RecordObject(groupConnection, "Add info reference");
+                groupConnection.infos.Add("");
+            }
+            for (int i = 0; i < groupConnection.infos.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                groupConnection.infos[i] = EditorGUILayout.TextField("Info title: ", groupConnection.infos[i]);
+                if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(GUILayout.Width(80))), $"Delete", Styles.DeleteButtonStyle))
+                {
+                    groupConnection.infos.RemoveAt(i);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("State references:");
             EditorGUI.indentLevel++;
             foreach (var stateReference in groupConnection.states)
             {
-                EditorGUILayout.LabelField(stateReference.title);
+                var title = stateReference ? stateReference.title : "No destination";
+                EditorGUILayout.LabelField(title);
                 var line = EditorGUILayout.BeginHorizontal();
 
                 GUILayout.Space(40);
@@ -102,7 +120,7 @@ class GroupConnectionEditor : EditorBase
                     break;
                 }
 
-                if (GUILayout.Button("Delete", Styles.DeleteButtonStyle))
+                if (Buttons.Delete())
                 {
                     Undo.RecordObject(groupConnection, "Delete state reference");
                     groupConnection.states.Remove(stateReference);
@@ -113,7 +131,6 @@ class GroupConnectionEditor : EditorBase
             EditorGUI.indentLevel--;
             EditorGUI.indentLevel--;
         }
-        EditorGUILayout.EndScrollView();
     }
 }
 #endif
