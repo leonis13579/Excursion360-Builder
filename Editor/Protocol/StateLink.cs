@@ -12,5 +12,7 @@ namespace Packages.tour_creator.Editor.Protocol
     {
         public string id = "state";
         public int colorScheme;
+        public bool rotationAfterStepAngleOverridden;
+        public float rotationAfterStepAngle;
     }
 }

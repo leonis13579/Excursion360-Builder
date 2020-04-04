@@ -28,12 +28,12 @@ class ContentEditor : EditorBase
                 item.name = EditorGUILayout.TextField("Name", item.name);
 
                 var buttonStyle = Styles.ToggleButtonStyleNormal;
-                if (StateItemPlaceEditor.EditableItem == item)
+                if (StateItemPlaceEditor.EditableItem as UnityEngine.Object == item)
                     buttonStyle = Styles.ToggleButtonStyleToggled;
 
                 if (GUILayout.Button("edit", buttonStyle))
                 {
-                    if (StateItemPlaceEditor.EditableItem == item)
+                    if (StateItemPlaceEditor.EditableItem as UnityEngine.Object == item)
                     {
                         StateItemPlaceEditor.CleadEditing();
                     }

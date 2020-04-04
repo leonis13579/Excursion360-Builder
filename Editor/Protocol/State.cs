@@ -18,5 +18,6 @@ namespace Packages.tour_creator.Editor.Protocol
         public Quaternion pictureRotation;
         public List<StateLink> links;
         public List<GroupStateLink> groupLinks;
+        public List<FieldItem> fieldItems;
     }
 }
