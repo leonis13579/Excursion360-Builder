@@ -55,7 +55,6 @@ public class Tour : MonoBehaviour
      */
     public float transitionSpeed = 2.0f;
     public ColorScheme[] colorSchemes = new ColorScheme[] { new ColorScheme { color = Color.red, name = "default" } };
-    public string linkPrefix;
 
     private State _currentState = null;
     private TextureSource _currentTextureSource = null;
@@ -103,7 +102,6 @@ public class Tour : MonoBehaviour
                 _nextState = null;
                 _nextTextureSource = null;
                 _transition = 0.0f;
-
                 SpawnConnections();
             }
         }
@@ -115,6 +113,8 @@ public class Tour : MonoBehaviour
     {
         if (_nextState != null || _transition > 0.0f)
             return;
+
+
 
         ClearConnections();
 
@@ -131,7 +131,7 @@ public class Tour : MonoBehaviour
         foreach (var connection in connections)
         {
             ConnectionMarker marker = Instantiate(connectionMarkerPrefab, transform);
-            marker.name = "Marker to " + connection.Destination.title;
+            marker.name = "Marker to " + connection.GetDestenationTitle();
             marker.connection = connection;
             marker.transform.localPosition = connection.Orientation * Vector3.forward;
             var markerRenderer = marker.GetComponent<Renderer>();

@@ -8,7 +8,18 @@ using UnityEngine;
 
 public class GroupConnection : MonoBehaviourStateItem
 {
+    public State Origin => GetComponent<State>();
     public string title;
     public List<State> states = new List<State>();
+    public List<string> infos = new List<string>();
+
+    public List<StateRotationAfterStepAnglePair> rotationAfterStepAngles = new List<StateRotationAfterStepAnglePair>();
+}
+
+[Serializable]
+public class StateRotationAfterStepAnglePair
+{
+    public State state;
+    public float rotationAfterStepAngle;
 }
 

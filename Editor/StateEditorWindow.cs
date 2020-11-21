@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using Excursion360_Builder.Editor.States.Items;
+using Packages.Excursion360_Builder.Editor.Extensions;
+using Packages.Excursion360_Builder.Editor;
+using Packages.Excursion360_Builder.Editor.States.Items;
 
 #if UNITY_EDITOR
 
@@ -20,12 +23,12 @@ public class StateEditorWindow : EditorWindow
 
     private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
     private readonly FieldItemEditor fieldItemEditor = new FieldItemEditor();
-    private readonly ContentEditor contentEditor = new ContentEditor();
+    private readonly ConnectionsToStateEditor connectionsToStateEditor = new ConnectionsToStateEditor();
 
-    private bool connectionsOpened = true;
+    private bool connectionsFromOpened = true;
+    private bool connectionsToOpened = true;
     private bool groupConnectionsOpened = true;
     private bool fieldItemsOpened = true;
-    private bool itemsOpened = true;
 
     private void OnEnable()
     {
@@ -39,7 +42,7 @@ public class StateEditorWindow : EditorWindow
 
     private void OnGUI()
     {
-
+        _selectedStates = _selectedStates.Where(s => (bool)(s)).ToList();
         // Draw pages
         if (_selectedStates.Count == 0 || _selectedStates.Count > 2)
         {
@@ -146,9 +149,9 @@ public class StateEditorWindow : EditorWindow
 
         GUILayout.EndHorizontal();
 
-        // Draw edit mode toggle
-        GUIStyle editModeButtonStyle = _connectionsEditMode ? Styles.ToggleButtonStyleToggled : Styles.ToggleButtonStyleNormal;
-        if (GUILayout.Button("Edit mode", editModeButtonStyle, GUILayout.Height(50)))
+
+
+        if (GUILayout.Toggle(_connectionsEditMode, "Edit mode", "Button", GUILayout.Height(50)) != _connectionsEditMode)
         {
             if (_connectionsEditMode)
             {
@@ -166,51 +169,66 @@ public class StateEditorWindow : EditorWindow
 
         _itemsScroll = EditorGUILayout.BeginScrollView(_itemsScroll);
         // Draw connections list
-        connectionsOpened = EditorGUILayout.Foldout(connectionsOpened, "Connections: ", true);
-        if (connectionsOpened)
+        connectionsFromOpened = EditorGUILayout.Foldout(connectionsFromOpened, "Connections from that:", true);
+        if (connectionsFromOpened)
         {
-            itemsOpened = false;
-
-
             var connections = state.GetComponents<Connection>();
-
+            EditorGUI.indentLevel++;
             foreach (var connection in connections)
             {
-                if (connection.Destination == null)
-                    continue;
-                GUILayout.Label(connection.Destination.title, EditorStyles.boldLabel);
+
+                var destinationTitle = connection.GetDestenationTitle() ?? "No destenation";
+                EditorGUILayout.LabelField(destinationTitle, EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+
+                var serializedObject = new SerializedObject(connection);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(connection.Destination)));
+                serializedObject.ApplyModifiedProperties();
+
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("move to"))
+                GUILayout.Space(EditorGUI.indentLevel * 20);
+                if (connection.Destination)
                 {
-                    FocusCamera(connection.Destination.gameObject);
-                    SelectObject(connection.Destination.gameObject);
+                    if (GUILayout.Button("move to"))
+                    {
+                        FocusCamera(connection.Destination.gameObject);
+                        SelectObject(connection.Destination.gameObject);
+                    }
+                    var toggled = StateItemPlaceEditor.EditableItem == (object)connection;
+                    if (GUILayout.Toggle(toggled, "edit", "Button") != toggled)
+                    {
+                        if (StateItemPlaceEditor.EditableItem == (object)connection)
+                        {
+                            StateItemPlaceEditor.CleadEditing();
+                        }
+                        else
+                        {
+                            StateItemPlaceEditor.EnableEditing(state, connection, Color.green);
+                        }
+                    }
                 }
-
-                var buttonStyle = Styles.ToggleButtonStyleNormal;
-                if (StateItemPlaceEditor.EditableItem == (object)connection)
-                    buttonStyle = Styles.ToggleButtonStyleToggled;
-
-                if (GUILayout.Button("edit", buttonStyle))
+                if (Buttons.Delete())
                 {
-                    if (StateItemPlaceEditor.EditableItem == (object)connection)
-                    {
-                        StateItemPlaceEditor.CleadEditing();
-                    }
-                    else
-                    {
-                        StateItemPlaceEditor.EnableEditing(state, connection, Color.green);
-                    }
+                    Undo.DestroyObjectImmediate(connection);
                 }
                 EditorGUILayout.EndHorizontal();
 
                 var schemes = Tour.Instance.colorSchemes;
                 var schemeNames = schemes.Select(s => s.name).ToArray();
                 connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
+                EditorGUI.indentLevel--;
                 EditorGUILayout.Space();
             }
+            EditorGUI.indentLevel--;
         }
 
-        groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections", true);
+        connectionsToOpened = EditorGUILayout.Foldout(connectionsToOpened, "Connections to that:", true);
+        if (connectionsToOpened)
+        {
+            connectionsToStateEditor.Draw(state);
+        }
+
+        groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections:", true);
         if (groupConnectionsOpened)
         {
             groupConnectionEditor.Draw(state);

@@ -28,13 +28,35 @@ public class GroupConnectionMarker : Marker
         for (int i = 0; i < groupConnection.states.Count; i++)
         {
             var newButton = Instantiate(buttonPrefab, buttonsHolder.transform);
-            newButton.transform.localPosition = 
+            newButton.transform.localPosition =
                 newButton.transform.localPosition
                  + Vector3.down * positionInitialDelta
                  + Vector3.down * (i + 1) * positionDelta;
             var targetState = groupConnection.states[i];
             newButton.GetComponentInChildren<TextMeshProUGUI>().SetText(targetState.title);
-            newButton.GetComponent<Button>().onClick.AddListener(() => Tour.Instance.StartTransition(targetState));
+            newButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                Tour.Instance.StartTransition(targetState);
+
+                var targetAngle = groupConnection.rotationAfterStepAngles.FirstOrDefault(p => p.state == targetState)?.rotationAfterStepAngle;
+                if (targetAngle.HasValue)
+                {
+                    var current = Camera.main.transform.localEulerAngles;
+                    Camera.main.transform.localEulerAngles = new Vector3(current.x, targetAngle.Value, current.z);
+                }
+            });
+        }
+        var positionAfterButtonsDelta = positionInitialDelta + groupConnection.states.Count * positionDelta;
+        for (int i = 0; i < groupConnection.infos.Count; i++)
+        {
+            var newButton = Instantiate(buttonPrefab, buttonsHolder.transform);
+            newButton.GetComponent<Image>().color = Color.gray;
+            newButton.transform.localPosition =
+                newButton.transform.localPosition
+                 + Vector3.down * positionAfterButtonsDelta
+                 + Vector3.down * (i + 1) * positionDelta;
+            var targetState = groupConnection.infos[i];
+            newButton.GetComponentInChildren<TextMeshProUGUI>().SetText(targetState);
         }
     }
 
