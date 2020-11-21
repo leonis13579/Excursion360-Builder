@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Excursion360_Builder.Editor.States.Items;
 
 #if UNITY_EDITOR
 
@@ -15,13 +16,15 @@ public class StateEditorWindow : EditorWindow
 
     private TextureSourceEditor _textureSourceEditor = new TextureSourceEditor();
 
-    private Vector2 _connectionsListScroll = Vector2.zero;
+    private Vector2 _itemsScroll = Vector2.zero;
 
     private readonly GroupConnectionEditor groupConnectionEditor = new GroupConnectionEditor();
+    private readonly FieldItemEditor fieldItemEditor = new FieldItemEditor();
     private readonly ContentEditor contentEditor = new ContentEditor();
 
     private bool connectionsOpened = true;
     private bool groupConnectionsOpened = true;
+    private bool fieldItemsOpened = true;
     private bool itemsOpened = true;
 
     private void OnEnable()
@@ -65,7 +68,7 @@ public class StateEditorWindow : EditorWindow
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Create new state", GUILayout.Height(50)))
         {
-            var newObject = PrefabUtility.InstantiatePrefab(TourEditor.StatePrefab) as GameObject;
+            var newObject = PrefabUtility.InstantiatePrefab(TourEditor.getStatePrefab()) as GameObject;
             SelectObject(newObject);
             Undo.RegisterCreatedObjectUndo(newObject, "Undo state creation");
         }
@@ -161,13 +164,13 @@ public class StateEditorWindow : EditorWindow
 
         EditorGUILayout.Space();
 
+        _itemsScroll = EditorGUILayout.BeginScrollView(_itemsScroll);
         // Draw connections list
         connectionsOpened = EditorGUILayout.Foldout(connectionsOpened, "Connections: ", true);
         if (connectionsOpened)
         {
             itemsOpened = false;
 
-            _connectionsListScroll = EditorGUILayout.BeginScrollView(_connectionsListScroll);
 
             var connections = state.GetComponents<Connection>();
 
@@ -184,12 +187,12 @@ public class StateEditorWindow : EditorWindow
                 }
 
                 var buttonStyle = Styles.ToggleButtonStyleNormal;
-                if (StateItemPlaceEditor.EditableItem == connection)
+                if (StateItemPlaceEditor.EditableItem == (object)connection)
                     buttonStyle = Styles.ToggleButtonStyleToggled;
 
                 if (GUILayout.Button("edit", buttonStyle))
                 {
-                    if (StateItemPlaceEditor.EditableItem == connection)
+                    if (StateItemPlaceEditor.EditableItem == (object)connection)
                     {
                         StateItemPlaceEditor.CleadEditing();
                     }
@@ -205,7 +208,6 @@ public class StateEditorWindow : EditorWindow
                 connection.colorScheme = EditorGUILayout.Popup(new GUIContent("Color scheme"), connection.colorScheme, schemeNames.Select(sn => new GUIContent(sn)).ToArray());
                 EditorGUILayout.Space();
             }
-            EditorGUILayout.EndScrollView();
         }
 
         groupConnectionsOpened = EditorGUILayout.Foldout(groupConnectionsOpened, "Group connections", true);
@@ -213,6 +215,13 @@ public class StateEditorWindow : EditorWindow
         {
             groupConnectionEditor.Draw(state);
         }
+
+        fieldItemsOpened = EditorGUILayout.Foldout(fieldItemsOpened, "Field items", true);
+        if (fieldItemsOpened)
+        {
+            fieldItemEditor.Draw(state);
+        }
+        EditorGUILayout.EndScrollView();
 
         // TODO Content draw
         //itemsOpened = EditorGUILayout.Foldout(itemsOpened, "Items: ", true);
@@ -319,10 +328,10 @@ public class StateEditorWindow : EditorWindow
             connectionSecond = Undo.AddComponent<Connection>(secondState.gameObject);
 
             connectionFirst.Destination = secondState;
-            connectionFirst.orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
+            connectionFirst.Orientation = Quaternion.FromToRotation(Vector3.forward, directionToSecond);
 
             connectionSecond.Destination = firstState;
-            connectionSecond.orientation = Quaternion.FromToRotation(Vector3.forward, -directionToSecond);
+            connectionSecond.Orientation = Quaternion.FromToRotation(Vector3.forward, -directionToSecond);
         }
         else
         {

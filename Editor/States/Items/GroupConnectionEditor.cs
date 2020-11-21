@@ -9,18 +9,14 @@ using UnityEngine;
 
 class GroupConnectionEditor : EditorBase
 {
-    private Vector2 groupsScroll = Vector2.zero;
 
     public void Draw(State state)
     {
-        EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Add"))
         {
             Undo.AddComponent<GroupConnection>(state.gameObject);
         }
-        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
-        groupsScroll = EditorGUILayout.BeginScrollView(groupsScroll);
         var groupConnections = state.GetComponents<GroupConnection>();
         foreach (var groupConnection in groupConnections)
         {
@@ -33,12 +29,12 @@ class GroupConnectionEditor : EditorBase
             groupConnection.title = EditorGUILayout.TextField("Title:", groupConnection.title);
 
             var buttonStyle = Styles.ToggleButtonStyleNormal;
-            if (StateItemPlaceEditor.EditableItem == groupConnection)
+            if (StateItemPlaceEditor.EditableItem == (object)groupConnection)
                 buttonStyle = Styles.ToggleButtonStyleToggled;
 
             if (GUI.Button(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect()), "edit", buttonStyle))
             {
-                if (StateItemPlaceEditor.EditableItem == groupConnection)
+                if (StateItemPlaceEditor.EditableItem == (object)groupConnection)
                 {
                     StateItemPlaceEditor.CleadEditing();
                 }
@@ -113,7 +109,6 @@ class GroupConnectionEditor : EditorBase
             EditorGUI.indentLevel--;
             EditorGUI.indentLevel--;
         }
-        EditorGUILayout.EndScrollView();
     }
 }
 #endif

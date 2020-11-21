@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Excursion360_Builder.Shared.States.Items.Field;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -31,6 +32,7 @@ public class StateGraphRenderer
 
     private GUIStyle _labelsStyle;
     private GUIStyle _labelsEditModeStyle;
+    private GUIStyle _groupItemLabelStyle;
 
     public void RenderStateGraph(SceneView sceneview)
     {
@@ -50,6 +52,12 @@ public class StateGraphRenderer
             _labelsEditModeStyle.normal.textColor = Color.blue;
         }
 
+        if (_groupItemLabelStyle == null)
+        {
+            _groupItemLabelStyle = new GUIStyle();
+            _groupItemLabelStyle.normal.textColor = Color.green;
+        }
+
         var states = UnityEngine.Object.FindObjectsOfType<State>();
 
         foreach (var state in states)
@@ -60,6 +68,7 @@ public class StateGraphRenderer
             RenderConnections(state);
             RenderGroupConnections(state);
             RenderItems(state);
+            RenderFieldItems(state);
         }
     }
 
@@ -68,7 +77,7 @@ public class StateGraphRenderer
         var groupConnections = state.GetComponents<GroupConnection>();
         foreach (var item in groupConnections)
         {
-            var itemPosition = item.transform.position + item.orientation * Vector3.forward;
+            var itemPosition = item.transform.position + item.Orientation * Vector3.forward;
             Handles.color = Color.blue;
             Handles.DotHandleCap(
                 0,
@@ -79,7 +88,7 @@ public class StateGraphRenderer
             );
             foreach (var targetState in item.states)
             {
-                var firstConnectionPosition = state.transform.position + item.orientation * Vector3.forward;
+                var firstConnectionPosition = state.transform.position + item.Orientation * Vector3.forward;
                 var secondConnectionPosition = targetState.transform.position;
 
                 var backConnection = targetState.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
@@ -89,12 +98,12 @@ public class StateGraphRenderer
                     var backGroupConnection = targetState.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
                     if (backGroupConnection != null)
                     {
-                        secondConnectionPosition += backGroupConnection.orientation * Vector3.forward;
+                        secondConnectionPosition += backGroupConnection.Orientation * Vector3.forward;
                     }
                 }
                 else
                 {
-                    secondConnectionPosition += backConnection.orientation * Vector3.forward;
+                    secondConnectionPosition += backConnection.Orientation * Vector3.forward;
                 }
 
                 if (showConnections)
@@ -111,7 +120,7 @@ public class StateGraphRenderer
         var items = state.GetComponents<ContentItem>();
         foreach (var item in items)
         {
-            var itemPosition = item.transform.position + item.orientation * Vector3.forward;
+            var itemPosition = item.transform.position + item.Orientation * Vector3.forward;
             Handles.color = Color.cyan;
             Handles.DotHandleCap(
                 0,
@@ -131,7 +140,7 @@ public class StateGraphRenderer
         foreach (var connection in connections)
         {
 
-            var firstConnectionPosition = connection.transform.position + connection.orientation * Vector3.forward;
+            var firstConnectionPosition = connection.transform.position + connection.Orientation * Vector3.forward;
             var secondConnectionPosition = connection.Destination.transform.position;
             var backConnection = connection.Destination.GetComponents<Connection>().FirstOrDefault(c => c.Destination == state);
 
@@ -140,12 +149,12 @@ public class StateGraphRenderer
                 var backGroupConnection = connection.Destination.GetComponents<GroupConnection>().FirstOrDefault(gc => gc.states.Any(s => s == state));
                 if (backGroupConnection != null)
                 {
-                    secondConnectionPosition += backGroupConnection.orientation * Vector3.forward;
+                    secondConnectionPosition += backGroupConnection.Orientation * Vector3.forward;
                 }
             }
             else
             {
-                secondConnectionPosition += backConnection.orientation * Vector3.forward;
+                secondConnectionPosition += backConnection.Orientation * Vector3.forward;
             }
 
             if (showConnections)
@@ -177,6 +186,45 @@ public class StateGraphRenderer
             Handles.Label(state.transform.position, state.title, _labelsStyle);
         }
     }
+
+    private void RenderFieldItems(State state)
+    {
+        var filedItems = state.GetComponents<FieldItem>();
+        foreach (var item in filedItems)
+        {
+            if (item.vertices.Length < 2)
+            {
+                Debug.LogWarning("Invalid field vertex count");
+            }
+            for (int i = 0; i < item.vertices.Length; i++)
+            {
+                FieldVertex vertex = item.vertices[i];
+
+                var position = state.gameObject.transform.position + vertex.Orientation * Vector3.forward;
+                Handles.color = Color.green;
+                Handles.DotHandleCap(
+                    0,
+                    position,
+                    Quaternion.identity,
+                    0.02f,
+                    EventType.Repaint
+                );
+                Handles.Label(position, vertex.index.ToString(), _labelsEditModeStyle);
+
+                var preItem = item.vertices[i == 0 ? item.vertices.Length - 1 : i - 1];
+                var prePosition = state.gameObject.transform.position + preItem.Orientation * Vector3.forward;
+                Handles.color = Color.yellow;
+                Handles.DrawLine(position, prePosition);
+            }
+            var centralPosition = item.vertices
+                .Select(v => state.gameObject.transform.position + v.Orientation * Vector3.forward)
+                .Aggregate((prev, next) => prev + next);
+            centralPosition /= item.vertices.Length;
+            Handles.Label(centralPosition, item.title, _groupItemLabelStyle);
+        }
+
+    }
+
 }
 
 #endif
