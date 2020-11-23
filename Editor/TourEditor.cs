@@ -61,7 +61,7 @@ public class TourEditor
     private const string MENU_ITEM_SHOW_LABELS = GROUP_NAME + "/Show Labels";
     private const string MENU_ITEM_SHOW_ITEMS = GROUP_NAME + "/Show Items";
 
-    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop (TODO)";
+    private const string MENU_ITEM_BUILD_DESKTOP = GROUP_NAME + "/Build For Desktop";
     private const string MENU_ITEM_BUILD_ANDROID = GROUP_NAME + "/Build For Android (TODO)";
     private const string MENU_ITEM_BUILD_WEB = GROUP_NAME + "/Build For WEB";
 
@@ -150,8 +150,6 @@ public class TourEditor
     [MenuItem(MENU_ITEM_BUILD_DESKTOP, false, 40)]
     private static void MenuItemBuildDesktop()
     {
-        EditorUtility.DisplayDialog("Not supported", "Desktop build not supported yet", "Ok");
-        return;
         ApplicationBuilder.Build(ApplicationBuilder.BuildType.Desktop);
     }
 
@@ -159,8 +157,7 @@ public class TourEditor
     private static void MenuItemBuildAndroid()
     {
         EditorUtility.DisplayDialog("Not supported", "Android build not supported yet", "Ok");
-        return;
-        ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
+        //ApplicationBuilder.Build(ApplicationBuilder.BuildType.Android);
     }
 
     [MenuItem(MENU_ITEM_BUILD_WEB, false, 42)]
