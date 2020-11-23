@@ -13,8 +13,9 @@ namespace Excursion360_Builder.Runtime.Markers
     {
         public FieldItem fieldItem;
         public override string Title => fieldItem.title;
+        public GameObject fieldItemContainerPrefab;
+
         public Material fieldItemMaterial;
-        public Material fieldItemContainer;
 
         private MeshRenderer meshRenderer;
 
@@ -34,22 +35,9 @@ namespace Excursion360_Builder.Runtime.Markers
 
         public override void HandleInteract()
         {
-            Debug.Log(Title);
-
-            StartCoroutine(CreateFieldItem());
-        }
-
-        private IEnumerator CreateFieldItem()
-        {
-            switch (fieldItem.contentType)
-            {
-                case FieldItem.ContentType.Photo:
-                    break;
-
-                case FieldItem.ContentType.Video:
-                    break;
-            }
-            yield return null;
+            var fieldItemContainer = Instantiate(fieldItemContainerPrefab, this.gameObject.transform);
+            fieldItemContainer.GetComponent<fieldItemContent>().Init(fieldItem);
+            fieldItemContainer.transform.position = new Vector3(meshRenderer.bounds.center.x, 0, meshRenderer.bounds.center.z);
         }
 
         public void Init(FieldItem fieldItem)

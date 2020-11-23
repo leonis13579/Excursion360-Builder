@@ -14,12 +14,36 @@ public class TourEditor
     /// <summary>
     /// Main viewer prefab
     /// </summary>
-    private static GameObject ViewSpherePrefab;
+    private static GameObject _viewSpherePrefab;
+    public static GameObject ViewSpherePrefab
+    {
+        get
+        {
+            GameObject viewSpherePrefab = _viewSpherePrefab ?? AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
+            return viewSpherePrefab;
+        }
+        set
+        {
+            _viewSpherePrefab = value;
+        }
+    }
 
     /// <summary>
     /// Prefab used when spawning new state from State Editor window
     /// </summary>
-    private static GameObject StatePrefab;
+    private static GameObject _statePrefab;
+    public static GameObject StatePrefab
+    {
+        get
+        {
+            GameObject statePrefab = _statePrefab ?? AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
+            return statePrefab;
+        }
+        set
+        {
+            _statePrefab = value;
+        }
+    }
 
     /// <summary>
     /// State graph renderer object
@@ -57,10 +81,10 @@ public class TourEditor
         };
 
         // Find view sphere prefab
-        ViewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
+        _viewSpherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/ViewSphere.prefab");
 
         // Find state prefab
-        StatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
+        _statePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
 
         // Create renderer
         StateGraphRenderer = new StateGraphRenderer();
@@ -80,20 +104,6 @@ public class TourEditor
             SetItemsVisible(_areItemsVisible);
             SceneView.RepaintAll();
         };
-    }
-
-    // new init StatePrefab if it is null
-    public static GameObject getStatePrefab()
-    {
-        GameObject statePrefab = StatePrefab ?? AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
-        return statePrefab;
-    }
-
-    // new init ViewSpherePrefab if it is null
-    public static GameObject getViewSpherePrefab()
-    {
-        GameObject viewSpherePrefab = ViewSpherePrefab ?? AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.rexagon.tour-creator/Prefabs/State.prefab");
-        return viewSpherePrefab;
     }
 
     [MenuItem(MENU_ITEM_NEW_TOUR, false, 0)]
