@@ -159,6 +159,7 @@ public class Tour : MonoBehaviour
         {
             var fieldItemMarker = Instantiate(baseFieldItemGameObject, transform);
             fieldItemMarker.Init(fieldItem);
+            _markers.Add(fieldItemMarker);
         }
 
     }
