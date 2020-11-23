@@ -12,10 +12,15 @@ public class ConnectionMarker : Marker
     /// </summary>
     public Connection connection;
 
-    public override string Title => connection.Destination.title;
+    public override string Title => connection.GetDestenationTitle();
 
     public override void HandleInteract()
     {
+        if (connection.rotationAfterStepAngleOverridden)
+        {
+            var current = Camera.main.transform.localEulerAngles;
+            Camera.main.transform.localEulerAngles = new Vector3(current.x, connection.rotationAfterStepAngle, current.z);
+        }
         Tour.Instance.StartTransition(connection.Destination);
     }
 }

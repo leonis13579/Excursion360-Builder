@@ -1,4 +1,5 @@
 ﻿using Excursion360_Builder.Shared.States.Items;
+using System.Linq;
 using UnityEngine;
 
 /**
@@ -37,4 +38,11 @@ public class Connection : MonoBehaviourStateItem
     public State Destination;
 
     private State _origin; /// Cache
+
+    public bool rotationAfterStepAngleOverridden;
+    public float rotationAfterStepAngle;
+    public string GetDestenationTitle() =>
+            Destination ?
+            Destination.title :
+            "NO DESTINATION !!!";
 }
