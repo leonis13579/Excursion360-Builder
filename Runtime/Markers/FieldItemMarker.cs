@@ -35,9 +35,11 @@ namespace Excursion360_Builder.Runtime.Markers
 
         public override void HandleInteract()
         {
-            var fieldItemContainer = Instantiate(fieldItemContainerPrefab, this.gameObject.transform);
-            fieldItemContainer.GetComponent<fieldItemContent>().Init(fieldItem);
-            fieldItemContainer.transform.position = new Vector3(meshRenderer.bounds.center.x, 0, meshRenderer.bounds.center.z);
+            if (transform.childCount == 0) {
+                var fieldItemContainer = Instantiate(fieldItemContainerPrefab, this.gameObject.transform);
+                fieldItemContainer.GetComponent<fieldItemContent>().Init(fieldItem);
+                fieldItemContainer.transform.position = new Vector3(meshRenderer.bounds.center.x, 0, meshRenderer.bounds.center.z);
+            }
         }
 
         public void Init(FieldItem fieldItem)

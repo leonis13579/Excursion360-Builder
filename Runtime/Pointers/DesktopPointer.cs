@@ -22,7 +22,6 @@ public class DesktopPointer : Pointer
     {
         if (HoverCheck(Camera.main.ScreenPointToRay(Input.mousePosition), out Marker marker) && Input.GetMouseButtonUp(0))
         {
-            Debug.Log(marker.Title);
             marker.HandleInteract();
         }
         else if (Input.GetMouseButton(0))
